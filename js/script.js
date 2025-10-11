@@ -616,3 +616,31 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// WhatsApp Contact Function
+function sendWhatsAppMessage() {
+    const name = document.querySelector('input[placeholder="Your Name"]').value || 'Customer';
+    const email = document.querySelector('input[placeholder="Your Email"]').value || '';
+    const subject = document.querySelector('input[placeholder="Subject"]').value || 'General Inquiry';
+    const message = document.querySelector('textarea[placeholder="Your Message"]').value || '';
+    
+    const whatsappNumber = '919789350475';
+    
+    const fullMessage = `Hello Gulf Global Co! 👋
+
+*Contact Form Submission:*
+• Name: ${name}
+• Email: ${email}
+• Subject: ${subject}
+
+*Message:*
+${message}
+
+I'm interested in your products and services. Please get back to me soon!
+
+Thank you! 🙏`;
+
+    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(fullMessage)}`;
+    
+    window.open(whatsappURL, '_blank');
+}
