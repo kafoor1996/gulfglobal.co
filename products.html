@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Gulf Global Co</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .products-hero {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
+            padding: 120px 0 80px;
+            color: white;
+            text-align: center;
+        }
+
+        .products-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .products-hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .product-categories {
+            padding: 80px 0;
+        }
+
+        .category-section {
+            margin-bottom: 4rem;
+        }
+
+        .category-title {
+            font-size: 2.5rem;
+            color: #2c5aa0;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .product-item {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+        }
+
+        .product-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-icon i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .product-item h3 {
+            color: #2c5aa0;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .product-item p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .product-specs {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-specs li {
+            padding: 0.3rem 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .product-specs li:before {
+            content: "•";
+            color: #2c5aa0;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .product-link {
+            color: #2c5aa0;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .product-link:hover {
+            color: #1e3d6f;
+        }
+
+        .breadcrumb {
+            background: #f8f9fa;
+            padding: 1rem 0;
+            margin-bottom: 0;
+        }
+
+        .breadcrumb-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .breadcrumb a {
+            color: #2c5aa0;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>Gulf Global Co</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="products.html" class="nav-link">Products</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#quality" class="nav-link">Quality</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#contact" class="nav-link">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link cart-link" id="cart-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count" id="cart-count">0</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <div class="breadcrumb-content">
+            <a href="index.html">Home</a> / Products
+        </div>
+    </div>
+
+    <!-- Products Hero -->
+    <section class="products-hero">
+        <div class="container">
+            <h1>Our Products</h1>
+            <p>Discover our comprehensive range of premium products designed to meet your industrial and commercial needs</p>
+        </div>
+    </section>
+
+    <!-- Product Categories -->
+    <section class="product-categories">
+        <div class="container">
+            <!-- Groceries -->
+            <div id="groceries" class="category-section">
+                <h2 class="category-title">Groceries</h2>
+                <div class="products-grid">
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img oil-bottle"></div>
+                            </div>
+                            <div class="product-badge">Fresh</div>
+                        </div>
+                        <h3>Sunrise Sunflower Oil</h3>
+                        <p class="product-description">Refined, light oil for daily cooking - 1L bottle</p>
+                        <div class="product-price">₹120</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="Sunrise Sunflower Oil" data-price="120">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="Sunrise Sunflower Oil" data-price="120">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img almonds"></div>
+                            </div>
+                            <div class="product-badge premium">Premium</div>
+                        </div>
+                        <h3>Royal Almonds (California)</h3>
+                        <p class="product-description">Crunchy, rich in protein - Grade A quality - 500g pack</p>
+                        <div class="product-price">₹450</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="Royal Almonds (California)" data-price="450">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="Royal Almonds (California)" data-price="450">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img rice"></div>
+                            </div>
+                            <div class="product-badge organic">Organic</div>
+                        </div>
+                        <h3>Basmati Gold 1121 Rice</h3>
+                        <p class="product-description">Aged, aromatic rice - 5kg pack</p>
+                        <div class="product-price">₹280</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="Basmati Gold 1121 Rice" data-price="280">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="Basmati Gold 1121 Rice" data-price="280">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img turmeric"></div>
+                            </div>
+                            <div class="product-badge organic">Organic</div>
+                        </div>
+                        <h3>Turmeric Gold Powder</h3>
+                        <p class="product-description">Pure, high-curcumin turmeric - 200g pack</p>
+                        <div class="product-price">₹85</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="Turmeric Gold Powder" data-price="85">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="Turmeric Gold Powder" data-price="85">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meats -->
+            <div id="meats" class="category-section">
+                <h2 class="category-title">Meats (Frozen & Fresh)</h2>
+                <div class="products-grid">
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img chicken"></div>
+                            </div>
+                            <div class="product-badge fresh">Fresh</div>
+                        </div>
+                        <h3>Fresh Chicken (Whole)</h3>
+                        <p class="product-description">Daily sourced, hygienically packed - 1kg</p>
+                        <div class="product-price">₹180</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="Fresh Chicken (Whole)" data-price="180">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="Fresh Chicken (Whole)" data-price="180">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img fish"></div>
+                            </div>
+                            <div class="product-badge fresh">Fresh</div>
+                        </div>
+                        <h3>Fresh Fish (Pomfret)</h3>
+                        <p class="product-description">Daily coastal catch - 1kg</p>
+                        <div class="product-price">₹320</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="Fresh Fish (Pomfret)" data-price="320">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="Fresh Fish (Pomfret)" data-price="320">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img chicken"></div>
+                            </div>
+                            <div class="product-badge quality">Quality</div>
+                        </div>
+                        <h3>Frozen Chicken Boneless</h3>
+                        <p class="product-description">Halal certified, frozen for freshness - 1kg</p>
+                        <div class="product-price">₹220</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="Frozen Chicken Boneless" data-price="220">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="Frozen Chicken Boneless" data-price="220">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img fish"></div>
+                            </div>
+                            <div class="product-badge fresh">Fresh</div>
+                        </div>
+                        <h3>Fresh Prawns (Tiger)</h3>
+                        <p class="product-description">Cleaned and fresh-packed - 500g</p>
+                        <div class="product-price">₹450</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="Fresh Prawns (Tiger)" data-price="450">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="Fresh Prawns (Tiger)" data-price="450">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Building Materials -->
+            <div id="building" class="category-section">
+                <h2 class="category-title">Building Materials</h2>
+                <div class="products-grid">
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img steel"></div>
+                            </div>
+                            <div class="product-badge quality">Quality</div>
+                        </div>
+                        <h3>Premium Steel Rods (TMT)</h3>
+                        <p class="product-description">High-grade steel rods for construction - 12mm diameter</p>
+                        <div class="product-price">₹65/kg</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="Premium Steel Rods (TMT)" data-price="65" onclick="addToCart('Premium Steel Rods (TMT)', 65)">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="Premium Steel Rods (TMT)" data-price="65" onclick="buyNow('Premium Steel Rods (TMT)', 65)">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information" onclick="openQualityModal()">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img steel"></div>
+                            </div>
+                            <div class="product-badge quality">Quality</div>
+                        </div>
+                        <h3>SuperCem PPC 43</h3>
+                        <p class="product-description">Portland Pozzolana Cement for general construction - 50kg bag</p>
+                        <div class="product-price">₹320</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="SuperCem PPC 43" data-price="320" onclick="addToCart('SuperCem PPC 43', 320)">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="SuperCem PPC 43" data-price="320" onclick="buyNow('SuperCem PPC 43', 320)">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information" onclick="openQualityModal()">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img paint"></div>
+                            </div>
+                            <div class="product-badge premium">Premium</div>
+                        </div>
+                        <h3>ProShield Interior Emulsion</h3>
+                        <p class="product-description">Smooth finish for interiors - 1L can</p>
+                        <div class="product-price">₹180</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="ProShield Interior Emulsion" data-price="180">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="ProShield Interior Emulsion" data-price="180">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img pipe"></div>
+                            </div>
+                            <div class="product-badge quality">Quality</div>
+                        </div>
+                        <h3>AquaFlow PVC Pipes</h3>
+                        <p class="product-description">Leak-proof, ISI-certified - 6 inch diameter</p>
+                        <div class="product-price">₹120/meter</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary add-to-cart" data-product="AquaFlow PVC Pipes" data-price="120">Add to Cart</button>
+                            <button class="btn btn-secondary buy-now" data-product="AquaFlow PVC Pipes" data-price="120">Buy Now</button>
+                            <button class="btn btn-quality quality-info" title="Quality Information">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="quality">
+        <div class="container">
+            <div class="quality-content">
+                <div class="quality-text">
+                    <h2>Need Custom Solutions?</h2>
+                    <p>Our team of experts can help you design and implement custom solutions tailored to your specific requirements. Contact us today to discuss your needs.</p>
+                    <ul class="quality-features">
+                        <li><i class="fas fa-check"></i> Custom Design & Engineering</li>
+                        <li><i class="fas fa-check"></i> Technical Consultation</li>
+                        <li><i class="fas fa-check"></i> Installation & Training</li>
+                        <li><i class="fas fa-check"></i> Ongoing Support</li>
+                    </ul>
+                </div>
+                <div class="quality-certificates">
+                    <div class="certificate">
+                        <i class="fas fa-phone"></i>
+                        <h4>Call Us</h4>
+                        <p>+91 98765 43210</p>
+                    </div>
+                    <div class="certificate">
+                        <i class="fas fa-envelope"></i>
+                        <h4>Email Us</h4>
+                        <p>info@gulfglobal.co</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Gulf Global Co</h3>
+                    <p>Leading the way in excellence and innovation across the Gulf region.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Our Products</h4>
+                    <ul>
+                        <li><a href="products.html#groceries">Groceries</a></li>
+                        <li><a href="products.html#meats">Fresh & Frozen Meats</a></li>
+                        <li><a href="products.html#building">Building Materials</a></li>
+                        <li><a href="products.html">All Products</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Our Services</h4>
+                    <ul>
+                        <li><a href="index.html#quality">Quality Assurance</a></li>
+                        <li><a href="index.html#contact">Global Import Solutions</a></li>
+                        <li><a href="index.html#contact">Trade Consultancy</a></li>
+                        <li><a href="index.html#contact">Supply Chain Management</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> Chennai, India</p>
+                    <p><i class="fas fa-phone"></i> +91 98765 43210</p>
+                    <p><i class="fas fa-envelope"></i> info@gulfglobal.co</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Gulf Global Co. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Shopping Cart Modal -->
+    <div id="cart-modal" class="cart-modal">
+        <div class="cart-modal-content">
+            <div class="cart-header">
+                <h3>Shopping Cart</h3>
+                <span class="close-cart">&times;</span>
+            </div>
+            <div class="cart-items" id="cart-items">
+                <!-- Cart items will be added here dynamically -->
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <strong>Total: ₹<span id="cart-total">0</span></strong>
+                </div>
+                <button class="btn btn-primary checkout-whatsapp" id="checkout-whatsapp">
+                    <i class="fab fa-whatsapp"></i> Checkout via WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quality Popup Modal -->
+    <div id="quality-modal" class="quality-modal">
+        <div class="quality-modal-content">
+            <div class="quality-header">
+                <h3><i class="fas fa-award"></i> Quality Standards</h3>
+                <span class="close-quality">&times;</span>
+            </div>
+            <div class="quality-body">
+                <div class="quality-intro">
+                    <p>At Gulf Global Co, we maintain the highest quality standards across all our products and services.</p>
+                </div>
+                <div class="quality-standards">
+                    <div class="standard-item">
+                        <div class="standard-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <div class="standard-content">
+                            <h4>ISO 9001:2015 Certified</h4>
+                            <p>Quality Management System ensuring consistent product quality and customer satisfaction.</p>
+                        </div>
+                    </div>
+                    <div class="standard-item">
+                        <div class="standard-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="standard-content">
+                            <h4>Rigorous Testing</h4>
+                            <p>Every product undergoes comprehensive quality testing before reaching our customers.</p>
+                        </div>
+                    </div>
+                    <div class="standard-item">
+                        <div class="standard-icon">
+                            <i class="fas fa-microscope"></i>
+                        </div>
+                        <div class="standard-content">
+                            <h4>Laboratory Testing</h4>
+                            <p>Advanced laboratory testing for food safety, purity, and nutritional content verification.</p>
+                        </div>
+                    </div>
+                    <div class="standard-item">
+                        <div class="standard-icon">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div class="standard-content">
+                            <h4>Fresh & Organic</h4>
+                            <p>Fresh products sourced daily with organic certification where applicable.</p>
+                        </div>
+                    </div>
+                    <div class="standard-item">
+                        <div class="standard-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="standard-content">
+                            <h4>Cold Chain Management</h4>
+                            <p>Temperature-controlled storage and transportation for perishable goods.</p>
+                        </div>
+                    </div>
+                    <div class="standard-item">
+                        <div class="standard-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="standard-content">
+                            <h4>Quality Guarantee</h4>
+                            <p>100% satisfaction guarantee with money-back policy for quality issues.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="quality-certificates">
+                    <h4>Our Certifications</h4>
+                    <div class="certificate-grid">
+                        <div class="certificate-item">
+                            <i class="fas fa-award"></i>
+                            <span>ISO 9001:2015</span>
+                        </div>
+                        <div class="certificate-item">
+                            <i class="fas fa-globe"></i>
+                            <span>ISO 14001:2015</span>
+                        </div>
+                        <div class="certificate-item">
+                            <i class="fas fa-utensils"></i>
+                            <span>FSSAI Certified</span>
+                        </div>
+                        <div class="certificate-item">
+                            <i class="fas fa-seedling"></i>
+                            <span>Organic Certified</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
