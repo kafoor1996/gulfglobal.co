@@ -105,6 +105,17 @@ function addToCart(product, price) {
 
     updateCartCount();
     showNotification(`${product} added to cart!`, 'success');
+    
+    // Change button text to "View Cart"
+    const addToCartBtn = event.target;
+    if (addToCartBtn && addToCartBtn.classList.contains('add-to-cart')) {
+        addToCartBtn.textContent = 'View Cart';
+        addToCartBtn.classList.remove('add-to-cart');
+        addToCartBtn.classList.add('view-cart');
+        addToCartBtn.onclick = function() {
+            document.getElementById('cart-modal').style.display = 'block';
+        };
+    }
 }
 
 function buyNow(product, price) {
@@ -176,35 +187,8 @@ function checkoutToWhatsApp() {
         return;
     }
 
-    let message = `🛒 *New Order from Gulf Global Co Website*\n\n`;
-    message += `📋 *Order Details:*\n`;
-
-    let total = 0;
-    cart.forEach((item, index) => {
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        message += `${index + 1}. ${item.product}\n`;
-        message += `   Quantity: ${item.quantity}\n`;
-        message += `   Price: ₹${item.price} each\n`;
-        message += `   Subtotal: ₹${itemTotal}\n\n`;
-    });
-
-    message += `💰 *Total Amount: ₹${total}*\n\n`;
-    message += `📞 *Contact Details:*\n`;
-    message += `Name: [Your Name]\n`;
-    message += `Phone: [Your Phone Number]\n`;
-    message += `Address: [Your Delivery Address]\n\n`;
-    message += `Please confirm the order and provide delivery details. Thank you!`;
-
-    const whatsappNumber = '919789350475'; // Gulf Global Co WhatsApp number
-    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-    window.open(whatsappURL, '_blank');
-
-    // Clear cart after checkout
-    cart = [];
-    updateCartCount();
-    document.getElementById('cart-modal').style.display = 'none';
+    // Show customer details modal instead of direct WhatsApp
+    openCustomerModal();
 }
 
 // Smooth scrolling for navigation links
@@ -651,7 +635,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const navMenu = document.getElementById('nav-menu');
     
     if (hamburger && navMenu) {
-        hamburger.addEventListener('click', function() {
+        hamburger.addEventListener('click', function(e) {
+            e.stopPropagation();
             hamburger.classList.toggle('active');
             navMenu.classList.toggle('active');
         });
@@ -672,4 +657,87 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+
+// Customer Modal Functions
+function openCustomerModal() {
+    const customerModal = document.getElementById('customer-modal');
+    if (customerModal) {
+        customerModal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        
+        // Add entrance animation
+        const modalContent = customerModal.querySelector('.customer-modal-content');
+        if (modalContent) {
+            modalContent.style.animation = 'slideInUp 0.4s ease';
+        }
+    }
+}
+
+function closeCustomerModal() {
+    const customerModal = document.getElementById('customer-modal');
+    if (customerModal) {
+        customerModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Customer form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const customerForm = document.getElementById('customer-form');
+    if (customerForm) {
+        customerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('customer-name').value;
+            const mobile = document.getElementById('customer-mobile').value;
+            const address = document.getElementById('customer-address').value;
+            const city = document.getElementById('customer-city').value;
+            const pincode = document.getElementById('customer-pincode').value;
+            
+            // Create WhatsApp message with customer details
+            let message = `🛒 *New Order from Gulf Global Co Website*\n\n`;
+            message += `📋 *Order Details:*\n`;
+
+            let total = 0;
+            cart.forEach((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                message += `${index + 1}. ${item.product}\n`;
+                message += `   Quantity: ${item.quantity}\n`;
+                message += `   Price: ₹${item.price} each\n`;
+                message += `   Subtotal: ₹${itemTotal}\n\n`;
+            });
+
+            message += `💰 *Total Amount: ₹${total}*\n\n`;
+            message += `👤 *Customer Details:*\n`;
+            message += `Name: ${name}\n`;
+            message += `Mobile: ${mobile}\n`;
+            message += `Address: ${address}\n`;
+            message += `City: ${city}\n`;
+            message += `Pincode: ${pincode}\n\n`;
+            message += `Please confirm the order and provide delivery details. Thank you!`;
+
+            const whatsappNumber = '919789350475';
+            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+            window.open(whatsappURL, '_blank');
+            
+            // Close modal and clear cart
+            closeCustomerModal();
+            cart = [];
+            updateCartCount();
+            document.getElementById('cart-modal').style.display = 'none';
+        });
+    }
+    
+    // Close customer modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const customerModal = document.getElementById('customer-modal');
+            if (customerModal && customerModal.style.display === 'block') {
+                closeCustomerModal();
+            }
+        }
+    });
 });
