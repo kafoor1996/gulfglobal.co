@@ -789,9 +789,9 @@ body {
 
 /* Product Badges */
 .product-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
+    position: relative;
+    display: inline-block;
+    margin: 8px 0;
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.8rem;
