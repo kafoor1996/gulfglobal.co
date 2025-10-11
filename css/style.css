@@ -846,12 +846,13 @@ body {
 
 /* Product Badges */
 .product-badge {
-    position: relative;
+    position: absolute;
+    top: 5px;
+    right: 5px;
     display: inline-block;
-    margin: 8px 0;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 0.7rem;
     font-weight: 600;
     color: white;
     text-transform: uppercase;
@@ -859,15 +860,19 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     z-index: 10;
     animation: pulse 2s ease-in-out infinite;
+    max-width: 60px;
+    text-align: center;
+    line-height: 1.2;
 }
 
 .product-badge.quality {
-    padding: 10px 18px;
-    font-size: 1rem;
+    padding: 6px 10px;
+    font-size: 0.8rem;
     font-weight: 700;
-    border-radius: 25px;
+    border-radius: 15px;
     box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
     animation: qualityPulse 3s ease-in-out infinite;
+    max-width: 70px;
 }
 
 .product-badge.fresh {
@@ -1267,87 +1272,6 @@ body {
     box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
-/* Customer Modal */
-.customer-modal {
-    display: none;
-    position: fixed;
-    z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    animation: fadeIn 0.3s ease;
-    overflow-y: auto;
-}
-
-.customer-modal-content {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    margin: 5% auto;
-    padding: 0;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.2);
-    animation: slideInUp 0.4s ease;
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.customer-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 20px 20px 0 0;
-}
-
-.customer-header h3 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.close-customer {
-    font-size: 2rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.close-customer:hover {
-    color: #ff6b6b;
-}
-
-.customer-body {
-    padding: 2rem;
-}
-
-.customer-body p {
-    margin-bottom: 1.5rem;
-    color: #666;
-    font-size: 1rem;
-}
-
-.customer-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 2rem;
-}
-
-.customer-actions .btn {
-    padding: 12px 24px;
-    border-radius: 25px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
 
 .form-group {
     margin-bottom: 1.5rem;
@@ -1520,8 +1444,11 @@ body {
 /* Responsive Design */
 @media (max-width: 768px) {
     .hamburger {
-        display: flex;
+        display: flex !important;
         order: 1;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 1001;
     }
 
     .nav-logo {
@@ -1532,6 +1459,15 @@ body {
 
     .cart-link {
         order: 3;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 1001;
+        position: relative !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        padding: 8px 12px !important;
+        border-radius: 20px !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
     }
 
     .nav-menu {
@@ -1545,6 +1481,7 @@ body {
         transition: 0.3s;
         box-shadow: 0 10px 27px rgba(0, 0, 0, 0.05);
         padding: 2rem 0;
+        z-index: 1000;
     }
 
     .nav-menu.active {
@@ -1553,6 +1490,11 @@ body {
 
     .nav-menu li {
         margin: 1rem 0;
+    }
+
+    /* Hide cart from mobile menu, keep it in main nav */
+    .nav-menu li:last-child {
+        display: none;
     }
 
     .hero {

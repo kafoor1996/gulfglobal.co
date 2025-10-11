@@ -2,20 +2,6 @@
 let cart = [];
 let cartTotal = 0;
 
-// Mobile Navigation Toggle
-const hamburger = document.querySelector('.hamburger');
-const navMenu = document.querySelector('.nav-menu');
-
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
-});
-
-// Close mobile menu when clicking on a link
-document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => {
-    hamburger.classList.remove('active');
-    navMenu.classList.remove('active');
-}));
 
 // Add to Cart functionality
 document.addEventListener('DOMContentLoaded', () => {
@@ -65,10 +51,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Quality info buttons
-    document.querySelectorAll('.quality-info').forEach(button => {
+    document.querySelectorAll('.quality-info:not([onclick])').forEach(button => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             openQualityModal();
+        });
+    });
+
+    // Buy now buttons - add listeners to buttons without onclick
+    document.querySelectorAll('.buy-now:not([onclick])').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const product = button.getAttribute('data-product');
+            const price = parseFloat(button.getAttribute('data-price'));
+            buyNow(product, price);
+        });
+    });
+
+    // Add to cart buttons - add listeners to buttons without onclick
+    document.querySelectorAll('.add-to-cart:not([onclick])').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const product = button.getAttribute('data-product');
+            const price = parseFloat(button.getAttribute('data-price'));
+            addToCart(product, price);
         });
     });
 
@@ -91,6 +100,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function addToCart(product, price) {
+    // Prevent multiple rapid clicks
+    const addToCartBtn = event.target;
+    if (addToCartBtn.disabled) {
+        return;
+    }
+
+    // Disable button temporarily to prevent multiple clicks
+    addToCartBtn.disabled = true;
+    setTimeout(() => {
+        addToCartBtn.disabled = false;
+    }, 500);
+
     const existingItem = cart.find(item => item.product === product);
 
     if (existingItem) {
@@ -104,10 +125,10 @@ function addToCart(product, price) {
     }
 
     updateCartCount();
+    updateCartDisplay();
     showNotification(`${product} added to cart!`, 'success');
-    
+
     // Change button text to "View Cart"
-    const addToCartBtn = event.target;
     if (addToCartBtn && addToCartBtn.classList.contains('add-to-cart')) {
         addToCartBtn.textContent = 'View Cart';
         addToCartBtn.classList.remove('add-to-cart');
@@ -119,15 +140,24 @@ function addToCart(product, price) {
 }
 
 function buyNow(product, price) {
-    // Clear cart and add single item
-    cart = [{
-        product: product,
-        price: price,
-        quantity: 1
-    }];
+    // Direct WhatsApp for single item purchase
+    let message = `🛒 *New Order from Gulf Global Co Website*\n\n`;
+    message += `📋 *Order Details:*\n`;
+    message += `1. ${product}\n`;
+    message += `   Quantity: 1\n`;
+    message += `   Price: ₹${price} each\n`;
+    message += `   Subtotal: ₹${price}\n\n`;
+    message += `💰 *Total Amount: ₹${price}*\n\n`;
+    message += `📞 *Please provide your details:*\n`;
+    message += `• Name: [Your Name]\n`;
+    message += `• Phone: [Your Phone Number]\n`;
+    message += `• Address: [Your Delivery Address]\n\n`;
+    message += `Please confirm the order and provide delivery details. Thank you!`;
 
-    updateCartCount();
-    checkoutToWhatsApp();
+    const whatsappNumber = '919789350475';
+    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    window.open(whatsappURL, '_blank');
 }
 
 function updateCartCount() {
@@ -187,20 +217,51 @@ function checkoutToWhatsApp() {
         return;
     }
 
-    // Show customer details modal instead of direct WhatsApp
-    openCustomerModal();
+    // Direct WhatsApp without customer popup
+    let message = `🛒 *New Order from Gulf Global Co Website*\n\n`;
+    message += `📋 *Order Details:*\n`;
+
+    let total = 0;
+    cart.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        message += `${index + 1}. ${item.product}\n`;
+        message += `   Quantity: ${item.quantity}\n`;
+        message += `   Price: ₹${item.price} each\n`;
+        message += `   Subtotal: ₹${itemTotal}\n\n`;
+    });
+
+    message += `💰 *Total Amount: ₹${total}*\n\n`;
+    message += `📞 *Please provide your details:*\n`;
+    message += `• Name: [Your Name]\n`;
+    message += `• Phone: [Your Phone Number]\n`;
+    message += `• Address: [Your Delivery Address]\n\n`;
+    message += `Please confirm the order and provide delivery details. Thank you!`;
+
+    const whatsappNumber = '919789350475';
+    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    window.open(whatsappURL, '_blank');
+
+    // Clear cart after checkout
+    cart = [];
+    updateCartCount();
+    document.getElementById('cart-modal').style.display = 'none';
 }
 
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
+        const href = this.getAttribute('href');
+        if (href && href !== '#') {
+            const target = document.querySelector(href);
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
         }
     });
 });
@@ -553,6 +614,12 @@ document.head.appendChild(notificationStyles);
 
 // Quality Modal Functions
 function openQualityModal() {
+    // Close any other open modals first
+    const customerModal = document.getElementById('customer-modal');
+    if (customerModal && customerModal.style.display === 'block') {
+        customerModal.style.display = 'none';
+    }
+
     const qualityModal = document.getElementById('quality-modal');
     if (qualityModal) {
         qualityModal.style.display = 'block';
@@ -603,13 +670,17 @@ document.addEventListener('keydown', (e) => {
 
 // WhatsApp Contact Function
 function sendWhatsAppMessage() {
+    console.log('sendWhatsAppMessage called'); // Debug log
+
     const name = document.querySelector('input[placeholder="Your Name"]').value || 'Customer';
     const email = document.querySelector('input[placeholder="Your Email"]').value || '';
     const subject = document.querySelector('input[placeholder="Subject"]').value || 'General Inquiry';
     const message = document.querySelector('textarea[placeholder="Your Message"]').value || '';
-    
+
+    console.log('Form data:', { name, email, subject, message }); // Debug log
+
     const whatsappNumber = '919789350475';
-    
+
     const fullMessage = `Hello Gulf Global Co! 👋
 
 *Contact Form Submission:*
@@ -625,7 +696,9 @@ I'm interested in your products and services. Please get back to me soon!
 Thank you! 🙏`;
 
     const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(fullMessage)}`;
-    
+
+    console.log('WhatsApp URL:', whatsappURL); // Debug log
+
     window.open(whatsappURL, '_blank');
 }
 
@@ -633,14 +706,20 @@ Thank you! 🙏`;
 document.addEventListener('DOMContentLoaded', function() {
     const hamburger = document.getElementById('hamburger');
     const navMenu = document.getElementById('nav-menu');
-    
+    const cartLink = document.querySelector('.cart-link');
+
+    console.log('Cart link found:', cartLink); // Debug log
+    console.log('Cart link display:', cartLink ? getComputedStyle(cartLink).display : 'not found'); // Debug log
+
     if (hamburger && navMenu) {
         hamburger.addEventListener('click', function(e) {
             e.stopPropagation();
+            console.log('Hamburger clicked'); // Debug log
             hamburger.classList.toggle('active');
             navMenu.classList.toggle('active');
+            console.log('Menu active:', navMenu.classList.contains('active')); // Debug log
         });
-        
+
         // Close mobile menu when clicking on a nav link
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', () => {
@@ -648,7 +727,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 navMenu.classList.remove('active');
             });
         });
-        
+
         // Close mobile menu when clicking outside
         document.addEventListener('click', function(event) {
             if (!hamburger.contains(event.target) && !navMenu.contains(event.target)) {
@@ -659,85 +738,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Customer Modal Functions
-function openCustomerModal() {
-    const customerModal = document.getElementById('customer-modal');
-    if (customerModal) {
-        customerModal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-        
-        // Add entrance animation
-        const modalContent = customerModal.querySelector('.customer-modal-content');
-        if (modalContent) {
-            modalContent.style.animation = 'slideInUp 0.4s ease';
-        }
-    }
-}
-
-function closeCustomerModal() {
-    const customerModal = document.getElementById('customer-modal');
-    if (customerModal) {
-        customerModal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-}
-
-// Customer form submission
-document.addEventListener('DOMContentLoaded', function() {
-    const customerForm = document.getElementById('customer-form');
-    if (customerForm) {
-        customerForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('customer-name').value;
-            const mobile = document.getElementById('customer-mobile').value;
-            const address = document.getElementById('customer-address').value;
-            const city = document.getElementById('customer-city').value;
-            const pincode = document.getElementById('customer-pincode').value;
-            
-            // Create WhatsApp message with customer details
-            let message = `🛒 *New Order from Gulf Global Co Website*\n\n`;
-            message += `📋 *Order Details:*\n`;
-
-            let total = 0;
-            cart.forEach((item, index) => {
-                const itemTotal = item.price * item.quantity;
-                total += itemTotal;
-                message += `${index + 1}. ${item.product}\n`;
-                message += `   Quantity: ${item.quantity}\n`;
-                message += `   Price: ₹${item.price} each\n`;
-                message += `   Subtotal: ₹${itemTotal}\n\n`;
-            });
-
-            message += `💰 *Total Amount: ₹${total}*\n\n`;
-            message += `👤 *Customer Details:*\n`;
-            message += `Name: ${name}\n`;
-            message += `Mobile: ${mobile}\n`;
-            message += `Address: ${address}\n`;
-            message += `City: ${city}\n`;
-            message += `Pincode: ${pincode}\n\n`;
-            message += `Please confirm the order and provide delivery details. Thank you!`;
-
-            const whatsappNumber = '919789350475';
-            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-            window.open(whatsappURL, '_blank');
-            
-            // Close modal and clear cart
-            closeCustomerModal();
-            cart = [];
-            updateCartCount();
-            document.getElementById('cart-modal').style.display = 'none';
-        });
-    }
-    
-    // Close customer modal with Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            const customerModal = document.getElementById('customer-modal');
-            if (customerModal && customerModal.style.display === 'block') {
-                closeCustomerModal();
-            }
-        }
-    });
-});
