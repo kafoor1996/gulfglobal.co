@@ -119,63 +119,92 @@
     background: #25d366;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .top-header {
-        padding: 6px 0;
+        display: none; /* Hide top header on tablet and mobile */
     }
 
     .top-header-content {
-        flex-direction: column;
-        text-align: center;
-        gap: 8px;
-    }
-
-    .free-shipping {
-        font-size: 0.8rem;
-        justify-content: center;
-    }
-
-    .top-right {
-        justify-content: center;
-        gap: 15px;
-    }
-
-    .contact-phone {
-        font-size: 0.8rem;
-    }
-
-    .social-links a {
-        width: 26px;
-        height: 26px;
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .top-header-content {
-        gap: 6px;
-    }
-
-    .free-shipping {
-        font-size: 0.75rem;
-    }
-
-    .top-right {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
         gap: 10px;
+        text-align: left;
+    }
+
+    .free-shipping {
+        font-size: 0.7rem;
+        flex: 1;
+        justify-content: flex-start;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .free-shipping span {
+        display: none;
+    }
+
+    .free-shipping i {
+        font-size: 0.8rem;
+        margin-right: 4px;
+    }
+
+    .top-right {
+        justify-content: flex-end;
+        gap: 8px;
+        flex-shrink: 0;
     }
 
     .contact-phone {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+        display: none;
     }
 
     .social-links {
-        gap: 8px;
+        gap: 6px;
     }
 
     .social-links a {
         width: 24px;
         height: 24px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+        padding: 3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-header {
+        padding: 6px 0;
+        font-size: 0.7rem;
+    }
+
+    .top-header-content {
+        gap: 6px;
+        padding: 0 10px;
+    }
+
+    .free-shipping {
+        font-size: 0.65rem;
+    }
+
+    .free-shipping i {
+        font-size: 0.7rem;
+    }
+
+    .top-right {
+        gap: 6px;
+    }
+
+    .social-links {
+        gap: 4px;
+    }
+
+    .social-links a {
+        width: 22px;
+        height: 22px;
+        font-size: 0.65rem;
+        padding: 2px;
     }
 }
 
@@ -212,6 +241,13 @@ body {
     z-index: 1001; /* Higher than top header to appear in front */
     transition: all 0.3s ease;
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Tablet and Mobile navbar positioning */
+@media (max-width: 1024px) {
+    .navbar {
+        top: 0px; /* Move navbar to top on tablet and mobile since header is hidden */
+    }
 }
 
 /* Hamburger Menu */
@@ -603,6 +639,13 @@ body {
     color: white;
     position: relative;
     overflow: hidden;
+}
+
+/* Tablet and Mobile hero section positioning */
+@media (max-width: 1024px) {
+    .hero {
+        padding-top: 70px; /* Only navbar height on tablet and mobile since header is hidden */
+    }
 }
 
 .hero::before {
@@ -1021,6 +1064,31 @@ body {
     background-position: center;
     background-repeat: no-repeat;
     transition: all 0.4s ease;
+}
+
+/* Default product images for categories */
+.product-img.groceries {
+    background-image: url('../images/default-product.svg');
+    background-size: contain;
+    background-color: #f8f9fa;
+}
+
+.product-img.meats {
+    background-image: url('../images/default-product.svg');
+    background-size: contain;
+    background-color: #f8f9fa;
+}
+
+.product-img.building {
+    background-image: url('../images/default-product.svg');
+    background-size: contain;
+    background-color: #f8f9fa;
+}
+
+.product-img.default {
+    background-image: url('../images/default-product.svg');
+    background-size: contain;
+    background-color: #f8f9fa;
 }
 
 /* Product Images */
@@ -1847,7 +1915,7 @@ body {
     .nav-menu {
         position: fixed;
         left: -100%;
-        top: 125px; /* Adjusted for top header (55px) + navbar (70px) height */
+        top: 70px; /* Only navbar height on tablet and mobile since header is hidden */
         flex-direction: column;
         background-color: white;
         width: 100%;

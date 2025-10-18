@@ -1,15 +1,34 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once 'includes/auth.php';
 
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit();
-}
+// Check if admin is logged in and has appropriate permissions
+requireLogin();
+
+// Refresh session variables if needed
+refreshSession();
 
 $pdo = getConnection();
+
+// Check if is_hot_sale column exists, if not create it
+try {
+    $stmt = $pdo->query("SHOW COLUMNS FROM products LIKE 'is_hot_sale'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE products ADD COLUMN is_hot_sale TINYINT(1) DEFAULT 0");
+    }
+} catch (Exception $e) {
+    // Column might already exist or table doesn't exist
+}
+// Display success/error messages from session
 $message = '';
+if (isset($_SESSION['success_message'])) {
+    $message = '<div class="success">' . $_SESSION['success_message'] . '</div>';
+    unset($_SESSION['success_message']);
+}
+if (isset($_SESSION['error_message'])) {
+    $message = '<div class="error">' . $_SESSION['error_message'] . '</div>';
+    unset($_SESSION['error_message']);
+}
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -21,25 +40,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 $stmt = $pdo->prepare("UPDATE products SET is_hot_sale = ? WHERE id = ?");
                 if ($stmt->execute([$is_hot_sale, $product_id])) {
-                    $message = '<div class="success">Hot sale status updated successfully!</div>';
+                    $_SESSION['success_message'] = 'Hot sale status updated successfully!';
+                    header('Location: hot-sale.php');
+                    exit();
                 } else {
-                    $message = '<div class="error">Failed to update hot sale status.</div>';
+                    $_SESSION['error_message'] = 'Failed to update hot sale status.';
+                    header('Location: hot-sale.php');
+                    exit();
                 }
                 break;
         }
     }
 }
 
-// Get all products
-$stmt = $pdo->query("SELECT * FROM products WHERE is_active = 1 ORDER BY is_hot_sale DESC, name ASC");
-$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Get all products with category information
+try {
+    $stmt = $pdo->query("
+        SELECT p.*, c.name as category_name
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        WHERE p.is_active = 1
+        ORDER BY p.is_hot_sale DESC, p.name ASC
+    ");
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $products = [];
+    $message = '<div class="error">Error loading products: ' . $e->getMessage() . '</div>';
+}
 
 // Get hot sale statistics
-$stmt = $pdo->query("SELECT COUNT(*) FROM products WHERE is_hot_sale = 1 AND is_active = 1");
-$hot_sale_count = $stmt->fetchColumn();
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) FROM products WHERE is_hot_sale = 1 AND is_active = 1");
+    $hot_sale_count = $stmt->fetchColumn();
+} catch (Exception $e) {
+    $hot_sale_count = 0;
+}
 
-$stmt = $pdo->query("SELECT COUNT(*) FROM products WHERE is_active = 1");
-$total_products = $stmt->fetchColumn();
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) FROM products WHERE is_active = 1");
+    $total_products = $stmt->fetchColumn();
+} catch (Exception $e) {
+    $total_products = 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -141,6 +183,22 @@ $total_products = $stmt->fetchColumn();
             display: flex;
             align-items: center;
             gap: 15px;
+        }
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .role-badge {
+            background: #4ade80;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-top: 2px;
         }
 
         .admin-avatar {
@@ -391,7 +449,10 @@ $total_products = $stmt->fetchColumn();
                     <div class="admin-avatar">
                         <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
                     </div>
-                    <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                    <div class="admin-details">
+                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                        <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
+                    </div>
                     <a href="logout.php" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
@@ -441,33 +502,42 @@ $total_products = $stmt->fetchColumn();
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($products as $product): ?>
+                            <?php if (empty($products)): ?>
                                 <tr>
-                                    <td>
-                                        <div class="product-name"><?php echo htmlspecialchars($product['name']); ?></div>
-                                        <div style="font-size: 0.8rem; color: #666;"><?php echo htmlspecialchars(substr($product['description'], 0, 50)) . '...'; ?></div>
-                                    </td>
-                                    <td><?php echo ucfirst(htmlspecialchars($product['category'])); ?></td>
-                                    <td class="product-price">₹<?php echo number_format($product['price'], 2); ?></td>
-                                    <td>
-                                        <?php if ($product['is_hot_sale']): ?>
-                                            <span class="hot-sale-badge">Hot Sale</span>
-                                        <?php else: ?>
-                                            <span class="regular-badge">Regular</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <form method="POST" style="display: inline;">
-                                            <input type="hidden" name="action" value="toggle_hot_sale">
-                                            <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
-                                            <label class="toggle-switch">
-                                                <input type="checkbox" name="is_hot_sale" <?php echo $product['is_hot_sale'] ? 'checked' : ''; ?> onchange="this.form.submit()">
-                                                <span class="slider"></span>
-                                            </label>
-                                        </form>
+                                    <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                                        <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                        No products found. <a href="products.php">Add some products first</a>.
                                     </td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php else: ?>
+                                <?php foreach ($products as $product): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="product-name"><?php echo htmlspecialchars($product['name']); ?></div>
+                                            <div style="font-size: 0.8rem; color: #666;"><?php echo htmlspecialchars(substr($product['description'] ?? '', 0, 50)) . '...'; ?></div>
+                                        </td>
+                                        <td><?php echo ucfirst(htmlspecialchars($product['category_name'] ?? 'Uncategorized')); ?></td>
+                                        <td class="product-price">₹<?php echo number_format($product['price'], 2); ?></td>
+                                        <td>
+                                            <?php if ($product['is_hot_sale']): ?>
+                                                <span class="hot-sale-badge">Hot Sale</span>
+                                            <?php else: ?>
+                                                <span class="regular-badge">Regular</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <form method="POST" style="display: inline;">
+                                                <input type="hidden" name="action" value="toggle_hot_sale">
+                                                <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                                                <label class="toggle-switch">
+                                                    <input type="checkbox" name="is_hot_sale" <?php echo $product['is_hot_sale'] ? 'checked' : ''; ?> onchange="this.form.submit()">
+                                                    <span class="slider"></span>
+                                                </label>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>

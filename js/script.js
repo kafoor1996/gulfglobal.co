@@ -31,14 +31,12 @@ function performSearch() {
 
 // Add to Cart functionality
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Cart script loaded successfully');
 
     // Initialize product search
     initProductSearch();
 
     // Use event delegation for better handling of dynamic content
     document.addEventListener('click', (e) => {
-        console.log('Click detected on:', e.target);
 
         // Handle Add to Cart buttons
         if (e.target.classList.contains('add-to-cart') || e.target.closest('.add-to-cart')) {
@@ -49,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const product = button.getAttribute('data-product');
             const price = parseFloat(button.getAttribute('data-price'));
 
-            console.log('Add to Cart clicked:', { product, price, button }); // Debug log
 
             if (product && price && !isNaN(price)) {
                 addToCart(product, price, button);
@@ -118,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
             const product = button.getAttribute('data-product');
             const price = parseFloat(button.getAttribute('data-price'));
-            console.log('Direct Add to Cart clicked:', { product, price });
             if (product && price && !isNaN(price)) {
                 addToCart(product, price, button);
             }
@@ -754,14 +750,12 @@ document.addEventListener('keydown', (e) => {
 
 // WhatsApp Contact Function
 function sendWhatsAppMessage() {
-    console.log('sendWhatsAppMessage called'); // Debug log
 
     const name = document.querySelector('input[placeholder="Your Name"]').value || 'Customer';
     const email = document.querySelector('input[placeholder="Your Email"]').value || '';
     const subject = document.querySelector('input[placeholder="Subject"]').value || 'General Inquiry';
     const message = document.querySelector('textarea[placeholder="Your Message"]').value || '';
 
-    console.log('Form data:', { name, email, subject, message }); // Debug log
 
     const whatsappNumber = '919789350475';
 
@@ -781,7 +775,6 @@ Thank you! 🙏`;
 
     const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(fullMessage)}`;
 
-    console.log('WhatsApp URL:', whatsappURL); // Debug log
 
     window.open(whatsappURL, '_blank');
 }
@@ -792,16 +785,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const navMenu = document.getElementById('nav-menu');
     const cartLink = document.querySelector('.cart-link');
 
-    console.log('Cart link found:', cartLink); // Debug log
-    console.log('Cart link display:', cartLink ? getComputedStyle(cartLink).display : 'not found'); // Debug log
 
     if (hamburger && navMenu) {
         hamburger.addEventListener('click', function(e) {
             e.stopPropagation();
-            console.log('Hamburger clicked'); // Debug log
             hamburger.classList.toggle('active');
             navMenu.classList.toggle('active');
-            console.log('Menu active:', navMenu.classList.contains('active')); // Debug log
         });
 
         // Close mobile menu when clicking on a nav link

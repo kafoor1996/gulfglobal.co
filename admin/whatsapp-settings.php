@@ -1,16 +1,27 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once 'includes/auth.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit();
-}
+// Check if admin is logged in and has permission to view WhatsApp settings
+requireLogin();
+requirePermission('view_whatsapp');
+
+// Refresh session variables if needed
+refreshSession();
 
 $pdo = getConnection();
+
+// Display success/error messages from session
 $message = '';
 $error = '';
+if (isset($_SESSION['success_message'])) {
+    $message = '<div class="success">' . $_SESSION['success_message'] . '</div>';
+    unset($_SESSION['success_message']);
+}
+if (isset($_SESSION['error_message'])) {
+    $error = '<div class="error">' . $_SESSION['error_message'] . '</div>';
+    unset($_SESSION['error_message']);
+}
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -33,7 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         ");
 
         $stmt->execute([$whatsapp_method, $instance_id, $access_token, $api_url]);
-        $message = "WhatsApp settings updated successfully!";
+        $_SESSION['success_message'] = 'WhatsApp settings updated successfully!';
+        header('Location: whatsapp-settings.php');
+        exit();
     } catch (PDOException $e) {
         $error = "Error updating settings: " . $e->getMessage();
     }
@@ -48,6 +61,12 @@ try {
     $error = "Error fetching settings: " . $e->getMessage();
     $settings = null;
 }
+
+// Display success message from session
+if (isset($_SESSION['success_message'])) {
+    $message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -55,8 +74,9 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Settings - Admin Panel</title>
+    <title>WhatsApp Settings - Gulf Global Co</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -65,66 +85,171 @@ try {
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .admin-container {
+            display: flex;
             min-height: 100vh;
-            padding: 20px;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #2c5aa0 0%, #667eea 100%);
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
             color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #4ade80;
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 0;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            color: #2c5aa0;
+            font-size: 1.8rem;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .role-badge {
+            background: #4ade80;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .content {
             padding: 30px;
-            text-align: center;
         }
 
-        .header h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-        }
-
-        .form-container {
-            padding: 40px;
+        .settings-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
+            margin-bottom: 5px;
+            font-weight: 500;
             color: #333;
         }
 
         .form-group input,
-        .form-group select {
+        .form-group textarea {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 0.9rem;
         }
 
         .form-group input:focus,
-        .form-group select:focus {
+        .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #2c5aa0;
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
         }
 
         .method-options {
@@ -134,189 +259,176 @@ try {
         }
 
         .method-option {
-            flex: 1;
-            padding: 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .method-option:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-
-        .method-option.selected {
-            border-color: #667eea;
-            background: #f0f4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .method-option input[type="radio"] {
-            display: none;
+            width: auto;
         }
 
-        .method-option i {
-            font-size: 2rem;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .api-settings {
-            display: none;
-            background: #f8f9ff;
+        .api-fields {
+            background: #f8f9fa;
             padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        .api-settings.show {
-            display: block;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid #e9ecef;
         }
 
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2c5aa0;
             color: white;
             border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: #1e3d6f;
         }
 
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success {
+        .success {
             background: #d4edda;
             color: #155724;
-            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
 
-        .alert-error {
+        .error {
             background: #f8d7da;
             color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #667eea;
-            text-decoration: none;
+            padding: 10px;
+            border-radius: 5px;
             margin-bottom: 20px;
-            font-weight: 600;
         }
 
-        .back-btn:hover {
-            color: #5a67d8;
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .method-options {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fab fa-whatsapp"></i> WhatsApp Settings</h1>
-            <p>Configure WhatsApp integration methods</p>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+                <p>Gulf Global Co</p>
+            </div>
+            <nav class="sidebar-menu">
+                <?php
+                $menuItems = getMenuItems();
+                $currentPage = basename($_SERVER['PHP_SELF']);
+                foreach ($menuItems as $item):
+                    $isActive = ($currentPage === $item['url']);
+                ?>
+                <a href="<?php echo $item['url']; ?>" class="menu-item <?php echo $isActive ? 'active' : ''; ?>">
+                    <i class="<?php echo $item['icon']; ?>"></i> <?php echo $item['name']; ?>
+                </a>
+                <?php endforeach; ?>
+            </nav>
         </div>
 
-        <div class="form-container">
-            <a href="dashboard.php" class="back-btn">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-
-            <?php if ($message): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($error): ?>
-                <div class="alert alert-error">
-                    <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
-                </div>
-            <?php endif; ?>
-
-            <form method="POST">
-                <div class="form-group">
-                    <label>WhatsApp Method</label>
-                    <div class="method-options">
-                        <label class="method-option <?php echo ($settings['method'] ?? 'direct') == 'direct' ? 'selected' : ''; ?>">
-                            <input type="radio" name="whatsapp_method" value="direct" <?php echo ($settings['method'] ?? 'direct') == 'direct' ? 'checked' : ''; ?>>
-                            <i class="fas fa-link"></i>
-                            <h3>Direct Link</h3>
-                            <p>Open WhatsApp directly with pre-filled message</p>
-                        </label>
-                        <label class="method-option <?php echo ($settings['method'] ?? '') == 'api' ? 'selected' : ''; ?>">
-                            <input type="radio" name="whatsapp_method" value="api" <?php echo ($settings['method'] ?? '') == 'api' ? 'checked' : ''; ?>>
-                            <i class="fas fa-code"></i>
-                            <h3>API Call</h3>
-                            <p>Send messages via WhatsApp API</p>
-                        </label>
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <h1>WhatsApp Settings</h1>
+                <div class="admin-info">
+                    <div class="admin-avatar">
+                        <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
                     </div>
+                    <div class="admin-details">
+                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                        <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
+                    </div>
+                    <a href="logout.php" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 </div>
+            </div>
 
-                <div class="api-settings <?php echo ($settings['method'] ?? '') == 'api' ? 'show' : ''; ?>" id="api-settings">
-                    <h3><i class="fas fa-cog"></i> API Configuration</h3>
+            <div class="content">
+                <?php if ($message): ?>
+                    <div class="success"><?php echo $message; ?></div>
+                <?php endif; ?>
 
-                    <div class="form-group">
-                        <label for="api_url">API URL</label>
-                        <input type="url" id="api_url" name="api_url"
-                               value="<?php echo htmlspecialchars($settings['api_url'] ?? 'https://dealsms.in/api/send'); ?>"
-                               placeholder="https://dealsms.in/api/send">
-                    </div>
+                <?php if ($error): ?>
+                    <div class="error"><?php echo $error; ?></div>
+                <?php endif; ?>
 
-                    <div class="form-group">
-                        <label for="instance_id">Instance ID</label>
-                        <input type="text" id="instance_id" name="instance_id"
-                               value="<?php echo htmlspecialchars($settings['instance_id'] ?? ''); ?>"
-                               placeholder="68F32BAC7AB86">
-                    </div>
+                <div class="settings-form">
+                    <form method="POST">
+                        <div class="form-group">
+                            <label>WhatsApp Method</label>
+                            <div class="method-options">
+                                <div class="method-option">
+                                    <input type="radio" id="direct" name="whatsapp_method" value="direct" <?php echo ($settings['method'] ?? 'direct') == 'direct' ? 'checked' : ''; ?>>
+                                    <label for="direct">Direct Link</label>
+                                </div>
+                                <div class="method-option">
+                                    <input type="radio" id="api" name="whatsapp_method" value="api" <?php echo ($settings['method'] ?? '') == 'api' ? 'checked' : ''; ?>>
+                                    <label for="api">API Integration</label>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="access_token">Access Token</label>
-                        <input type="text" id="access_token" name="access_token"
-                               value="<?php echo htmlspecialchars($settings['access_token'] ?? ''); ?>"
-                               placeholder="68dbd933b8e16">
-                    </div>
+                        <div id="api-fields" class="api-fields" style="<?php echo ($settings['method'] ?? 'direct') == 'api' ? 'display: block;' : 'display: none;'; ?>">
+                            <div class="form-group">
+                                <label for="instance_id">Instance ID</label>
+                                <input type="text" id="instance_id" name="instance_id" value="<?php echo htmlspecialchars($settings['instance_id'] ?? ''); ?>">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="access_token">Access Token</label>
+                                <input type="text" id="access_token" name="access_token" value="<?php echo htmlspecialchars($settings['access_token'] ?? ''); ?>">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="api_url">API URL</label>
+                                <input type="url" id="api_url" name="api_url" value="<?php echo htmlspecialchars($settings['api_url'] ?? 'https://dealsms.in/api/send'); ?>">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn">
+                            <i class="fas fa-save"></i> Save WhatsApp Settings
+                        </button>
+                    </form>
                 </div>
-
-                <button type="submit" class="btn">
-                    <i class="fas fa-save"></i> Save Settings
-                </button>
-            </form>
+            </div>
         </div>
     </div>
 
     <script>
-        // Handle method selection
-        document.querySelectorAll('input[name="whatsapp_method"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const apiSettings = document.getElementById('api-settings');
-                if (this.value === 'api') {
-                    apiSettings.classList.add('show');
-                } else {
-                    apiSettings.classList.remove('show');
-                }
+        // Show/hide API fields based on method selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const directRadio = document.getElementById('direct');
+            const apiRadio = document.getElementById('api');
+            const apiFields = document.getElementById('api-fields');
 
-                // Update visual selection
-                document.querySelectorAll('.method-option').forEach(option => {
-                    option.classList.remove('selected');
-                });
-                this.closest('.method-option').classList.add('selected');
-            });
+            function toggleApiFields() {
+                if (apiRadio.checked) {
+                    apiFields.style.display = 'block';
+                } else {
+                    apiFields.style.display = 'none';
+                }
+            }
+
+            directRadio.addEventListener('change', toggleApiFields);
+            apiRadio.addEventListener('change', toggleApiFields);
         });
     </script>
 </body>

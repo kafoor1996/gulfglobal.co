@@ -1,12 +1,13 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once 'includes/auth.php';
 
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit();
-}
+// Check if admin is logged in and has permission to view orders
+requireLogin();
+requirePermission('view_orders');
+
+// Refresh session variables if needed
+refreshSession();
 
 $pdo = getConnection();
 $message = '';
@@ -116,6 +117,23 @@ $message = '';
             gap: 15px;
         }
 
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .role-badge {
+            background: #4ade80;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
         .admin-avatar {
             width: 40px;
             height: 40px;
@@ -217,27 +235,16 @@ $message = '';
                 <p>Gulf Global Co</p>
             </div>
             <nav class="sidebar-menu">
-                <a href="dashboard.php" class="menu-item">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                <?php
+                $menuItems = getMenuItems();
+                $currentPage = basename($_SERVER['PHP_SELF']);
+                foreach ($menuItems as $item):
+                    $isActive = ($currentPage === $item['url']);
+                ?>
+                <a href="<?php echo $item['url']; ?>" class="menu-item <?php echo $isActive ? 'active' : ''; ?>">
+                    <i class="<?php echo $item['icon']; ?>"></i> <?php echo $item['name']; ?>
                 </a>
-                <a href="products.php" class="menu-item">
-                    <i class="fas fa-box"></i> Products
-                </a>
-                <a href="categories.php" class="menu-item">
-                    <i class="fas fa-tags"></i> Categories
-                </a>
-                <a href="subcategories.php" class="menu-item">
-                    <i class="fas fa-list"></i> Subcategories
-                </a>
-                <a href="hot-sale.php" class="menu-item">
-                    <i class="fas fa-fire"></i> Hot Sale
-                </a>
-                <a href="orders.php" class="menu-item active">
-                    <i class="fas fa-shopping-cart"></i> Orders
-                </a>
-                <a href="settings.php" class="menu-item">
-                    <i class="fas fa-cog"></i> Settings
-                </a>
+                <?php endforeach; ?>
             </nav>
         </div>
 
@@ -249,7 +256,10 @@ $message = '';
                     <div class="admin-avatar">
                         <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
                     </div>
-                    <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                    <div class="admin-details">
+                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                        <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
+                    </div>
                     <a href="logout.php" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>

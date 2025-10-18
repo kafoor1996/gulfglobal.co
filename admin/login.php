@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once 'includes/auth.php';
 
 // Redirect if already logged in
-if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-    header('Location: /admin/dashboard.php');
+if ($auth->isLoggedIn()) {
+    header('Location: dashboard.php');
     exit();
 }
 
@@ -17,24 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($username) || empty($password)) {
         $error = 'Please fill in all fields';
     } else {
-        try {
-            $pdo = getConnection();
-            $stmt = $pdo->prepare("SELECT id, username, password, full_name, is_active FROM admin_users WHERE username = ? AND is_active = 1");
-            $stmt->execute([$username]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user && password_verify($password, $user['password'])) {
-                $_SESSION['admin_logged_in'] = true;
-                $_SESSION['admin_id'] = $user['id'];
-                $_SESSION['admin_username'] = $user['username'];
-                $_SESSION['admin_name'] = $user['full_name'];
-                header('Location: /admin/dashboard.php');
-                exit();
-            } else {
-                $error = 'Invalid username or password';
-            }
-        } catch (Exception $e) {
-            $error = 'Login failed. Please try again.';
+        if ($auth->login($username, $password)) {
+            header('Location: dashboard.php');
+            exit();
+        } else {
+            $error = 'Invalid username or password';
         }
     }
 }

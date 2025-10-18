@@ -1,9 +1,11 @@
 <?php
-// Database Configuration
+// Local Database Configuration
+// Use this file for local development environment
+
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'gulf_global_co');
-define('DB_USER', 'root');
-define('DB_PASS', 'MySQL123!');
+define('DB_NAME', 'mediawor_gulf_global_co');
+define('DB_USER', 'mediawor_gulf_global_co');
+define('DB_PASS', '69]j6S0xW8QzBlcw');
 
 // Create connection
 function getConnection() {

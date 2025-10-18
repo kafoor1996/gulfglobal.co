@@ -13,7 +13,8 @@ $pdo = getConnection();
 
 // Get product details with category and subcategory
 $stmt = $pdo->prepare("
-    SELECT p.*, c.name as category_name, s.name as subcategory_name
+    SELECT p.*, c.name as category_name, s.name as subcategory_name,
+           (SELECT image_path FROM product_images WHERE product_id = p.id AND image_type = 'main' AND is_active = 1 LIMIT 1) as main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN subcategories s ON p.subcategory_id = s.id
@@ -22,6 +23,16 @@ $stmt = $pdo->prepare("
 $stmt->execute([$product_id]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// Get gallery images
+$stmt = $pdo->prepare("
+    SELECT image_path, sort_order
+    FROM product_images
+    WHERE product_id = ? AND image_type = 'gallery' AND is_active = 1
+    ORDER BY sort_order ASC
+");
+$stmt->execute([$product_id]);
+$gallery_images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 if (!$product) {
     header('Location: products.php');
     exit();
@@ -29,7 +40,8 @@ if (!$product) {
 
 // Get related products (same category)
 $stmt = $pdo->prepare("
-    SELECT p.*, c.name as category_name, s.name as subcategory_name
+    SELECT p.*, c.name as category_name, s.name as subcategory_name,
+           (SELECT image_path FROM product_images WHERE product_id = p.id AND image_type = 'main' AND is_active = 1 LIMIT 1) as main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN subcategories s ON p.subcategory_id = s.id
@@ -51,23 +63,24 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .product-quality-info {
-            margin: 2rem 0;
-            padding: 1.5rem;
             background: #f8f9fa;
-            border-radius: 10px;
-            border-left: 4px solid #25d366;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 100%;
         }
         .product-quality-info h3 {
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
         }
         .quality-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
         }
         .quality-item {
             display: flex;
@@ -77,6 +90,7 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 100%;
         }
         .quality-item i {
             font-size: 1.5rem;
@@ -95,7 +109,10 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
         @media (max-width: 768px) {
             .quality-details {
-                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+            .quality-item {
+                padding: 0.8rem;
             }
         }
     </style>
@@ -145,6 +162,53 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
             font-size: 4rem;
             color: #2c5aa0;
             border: 2px solid #e9ecef;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-main-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+
+        .product-gallery {
+            margin-top: 20px;
+        }
+
+        .product-gallery h4 {
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .gallery-thumbnails {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .gallery-thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-thumb:hover,
+        .gallery-thumb.active {
+            border-color: #2c5aa0;
+            transform: scale(1.05);
+        }
+
+        .gallery-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .product-info-section {
@@ -355,6 +419,14 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
             font-size: 2rem;
             color: #2c5aa0;
             margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .related-product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
         }
 
         .related-product-title {
@@ -547,8 +619,25 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="product-details-grid">
             <div class="product-image-section">
                 <div class="product-main-image">
-                    <i class="fas fa-box"></i>
+                    <?php if (!empty($product['main_image'])): ?>
+                        <img src="<?php echo htmlspecialchars($product['main_image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" id="main-product-image" onerror="this.src='images/default-product.svg';">
+                    <?php else: ?>
+                        <img src="images/default-product.svg" alt="<?php echo htmlspecialchars($product['name']); ?>" id="main-product-image">
+                    <?php endif; ?>
                 </div>
+
+                <?php if (!empty($gallery_images)): ?>
+                <div class="product-gallery">
+                    <h4>Product Gallery</h4>
+                    <div class="gallery-thumbnails">
+                        <?php foreach ($gallery_images as $index => $gallery_image): ?>
+                            <div class="gallery-thumb <?php echo $index === 0 ? 'active' : ''; ?>" onclick="changeMainImage('<?php echo htmlspecialchars($gallery_image['image_path']); ?>', this)">
+                                <img src="<?php echo htmlspecialchars($gallery_image['image_path']); ?>" alt="Gallery Image <?php echo $index + 1; ?>">
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
 
             <div class="product-info-section">
@@ -576,40 +665,6 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <li><i class="fas fa-check"></i> Fast Delivery</li>
                         <li><i class="fas fa-check"></i> Competitive Pricing</li>
                     </ul>
-                </div>
-
-                <div class="product-quality-info">
-                    <h3><i class="fas fa-award"></i> Quality Information</h3>
-                    <div class="quality-details">
-                        <div class="quality-item">
-                            <i class="fas fa-certificate"></i>
-                            <div>
-                                <h4>ISO 9001:2015 Certified</h4>
-                                <p>Quality Management System ensuring consistent product quality and customer satisfaction.</p>
-                            </div>
-                        </div>
-                        <div class="quality-item">
-                            <i class="fas fa-shield-alt"></i>
-                            <div>
-                                <h4>Rigorous Testing</h4>
-                                <p>Every product undergoes comprehensive quality testing before reaching our customers.</p>
-                            </div>
-                        </div>
-                        <div class="quality-item">
-                            <i class="fas fa-microscope"></i>
-                            <div>
-                                <h4>Laboratory Testing</h4>
-                                <p>Advanced laboratory testing for safety, purity, and content verification.</p>
-                            </div>
-                        </div>
-                        <div class="quality-item">
-                            <i class="fas fa-truck"></i>
-                            <div>
-                                <h4>Cold Chain Management</h4>
-                                <p>Temperature-controlled storage and transportation for perishable goods.</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="product-actions">
@@ -670,6 +725,41 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
+        <!-- Quality Information -->
+        <div class="product-quality-info">
+            <h3><i class="fas fa-award"></i> Quality Information</h3>
+            <div class="quality-details">
+                <div class="quality-item">
+                    <i class="fas fa-certificate"></i>
+                    <div>
+                        <h4>ISO 9001:2015 Certified</h4>
+                        <p>Quality Management System ensuring consistent product quality and customer satisfaction.</p>
+                    </div>
+                </div>
+                <div class="quality-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <h4>Rigorous Testing</h4>
+                        <p>Every product undergoes comprehensive quality testing before reaching our customers.</p>
+                    </div>
+                </div>
+                <div class="quality-item">
+                    <i class="fas fa-microscope"></i>
+                    <div>
+                        <h4>Laboratory Testing</h4>
+                        <p>Advanced laboratory testing for safety, purity, and content verification.</p>
+                    </div>
+                </div>
+                <div class="quality-item">
+                    <i class="fas fa-truck"></i>
+                    <div>
+                        <h4>Cold Chain Management</h4>
+                        <p>Temperature-controlled storage and transportation for perishable goods.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Related Products -->
         <?php if (!empty($related_products)): ?>
         <div class="related-products">
@@ -678,7 +768,11 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php foreach ($related_products as $related): ?>
                     <div class="related-product-card">
                         <div class="related-product-image">
-                            <i class="fas fa-box"></i>
+                            <?php if (!empty($related['main_image'])): ?>
+                                <img src="<?php echo htmlspecialchars($related['main_image']); ?>" alt="<?php echo htmlspecialchars($related['name']); ?>" onerror="this.src='images/default-product.svg';">
+                            <?php else: ?>
+                                <img src="images/default-product.svg" alt="<?php echo htmlspecialchars($related['name']); ?>">
+                            <?php endif; ?>
                         </div>
                         <h3 class="related-product-title"><?php echo htmlspecialchars($related['name']); ?></h3>
                         <div class="related-product-price">₹<?php echo number_format($related['price'], 2); ?></div>
@@ -721,5 +815,20 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <script src="js/script.js?v=2.1"></script>
     <script src="js/whatsapp.js?v=1.7"></script>
+    <script>
+        function changeMainImage(imagePath, thumbElement) {
+            // Update main image
+            const mainImage = document.getElementById('main-product-image');
+            if (mainImage) {
+                mainImage.src = imagePath;
+            }
+
+            // Update active thumbnail
+            document.querySelectorAll('.gallery-thumb').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            thumbElement.classList.add('active');
+        }
+    </script>
 </body>
 </html>

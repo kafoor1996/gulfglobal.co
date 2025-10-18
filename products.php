@@ -29,7 +29,8 @@ if (!empty($search_term)) {
     $params[] = $search_param;
 }
 
-$sql = "SELECT p.*, c.name as category_name, s.name as subcategory_name
+$sql = "SELECT p.*, c.name as category_name, s.name as subcategory_name,
+               (SELECT image_path FROM product_images WHERE product_id = p.id AND image_type = 'main' AND is_active = 1 LIMIT 1) as main_image
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories s ON p.subcategory_id = s.id
@@ -75,6 +76,13 @@ foreach ($products as $product) {
         .product-title-link:hover {
             color: #25d366;
             text-decoration: none;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
         }
     </style>
     <style>
@@ -377,11 +385,15 @@ foreach ($products as $product) {
                         <div class="products-grid">
                             <?php foreach ($cat_products as $product): ?>
                                 <div class="product-card">
-                                    <div class="product-image-container">
-                                        <div class="product-image">
-                                            <div class="product-img <?php echo strtolower(str_replace(' ', '-', $product['category_name'] ?? 'default')); ?>"></div>
-                                        </div>
+                                <div class="product-image-container">
+                                    <div class="product-image">
+                                        <?php if (!empty($product['main_image'])): ?>
+                                            <img src="<?php echo htmlspecialchars($product['main_image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-img" onerror="this.src='images/default-product.svg';">
+                                        <?php else: ?>
+                                            <img src="images/default-product.svg" alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-img">
+                                        <?php endif; ?>
                                     </div>
+                                </div>
                                     <?php if ($product['is_hot_sale']): ?>
                                         <div class="product-badge hot-sale">Hot Sale</div>
                                     <?php else: ?>
@@ -410,7 +422,11 @@ foreach ($products as $product) {
                             <div class="product-card">
                                 <div class="product-image-container">
                                     <div class="product-image">
-                                        <div class="product-img <?php echo strtolower(str_replace(' ', '-', $product['category_name'] ?? 'default')); ?>"></div>
+                                        <?php if (!empty($product['main_image'])): ?>
+                                            <img src="<?php echo htmlspecialchars($product['main_image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-img" onerror="this.src='images/default-product.svg';">
+                                        <?php else: ?>
+                                            <img src="images/default-product.svg" alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-img">
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <?php if ($product['is_hot_sale']): ?>
@@ -418,7 +434,7 @@ foreach ($products as $product) {
                                 <?php else: ?>
                                     <div class="product-badge <?php echo strtolower(str_replace(' ', '-', $product['category_name'] ?? 'default')); ?>"><?php echo htmlspecialchars($product['category_name'] ?? 'Uncategorized'); ?></div>
                                 <?php endif; ?>
-                                <h3><?php echo htmlspecialchars($product['name']); ?></h3>
+                                <h3><a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-title-link"><?php echo htmlspecialchars($product['name']); ?></a></h3>
                                 <p class="product-description"><?php echo htmlspecialchars($product['description']); ?></p>
                                 <div class="product-price">₹<?php echo number_format($product['price'], 2); ?></div>
                                 <div class="product-actions">

@@ -13,7 +13,6 @@ class WhatsAppManager {
             const response = await fetch(`api/whatsapp-settings.php?t=${Date.now()}`);
             this.settings = await response.json();
             this.settingsLoaded = true;
-            console.log('Loaded WhatsApp settings:', this.settings); // Debug log
         } catch (error) {
             console.error('Error loading WhatsApp settings:', error);
             // Fallback to direct method
@@ -213,7 +212,6 @@ class WhatsAppManager {
     async sendMessage(message, phone = null) {
         // Prevent multiple calls
         if (this.sending) {
-            console.log('Already sending message, ignoring duplicate call');
             return;
         }
 
@@ -222,26 +220,22 @@ class WhatsAppManager {
         try {
             // Ensure settings are loaded
             if (!this.settingsLoaded) {
-                console.log('Settings not loaded, loading now...');
                 await this.loadSettings();
             }
 
-            console.log('WhatsApp method:', this.settings.method); // Debug log
-            console.log('Full settings:', this.settings); // Debug log
 
             if (this.settings.method === 'api') {
-                console.log('Using API method');
-                console.log('API Settings:', this.settings);
                 // API method: Get user data and send via API
                 const userData = await this.getUserData();
                 if (!userData) return;
                 await this.sendViaAPI(message, userData);
             } else {
-                console.log('Using Direct method');
-                console.log('Settings method was:', this.settings.method);
                 // Direct method: Open WhatsApp directly without popup
                 this.sendViaDirectLink(message);
             }
+
+            // Show success message after sending
+            this.showSuccessMessage();
         } finally {
             this.sending = false;
         }
@@ -264,7 +258,7 @@ class WhatsAppManager {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    message: `${message}\n\nFrom: ${userData.name}\nPhone: ${userData.phone}`
+                    message: message
                 })
             });
 
@@ -272,7 +266,6 @@ class WhatsAppManager {
 
             if (result.success) {
                 // Message sent successfully - no alert needed
-                console.log('Message sent successfully via WhatsApp API');
             } else {
                 alert('Failed to send message: ' + result.error);
             }
@@ -280,6 +273,107 @@ class WhatsAppManager {
             console.error('Error sending WhatsApp message:', error);
             alert('Error sending message. Please try again.');
         }
+    }
+
+    // Show success message modal
+    showSuccessMessage() {
+        const modal = this.createSuccessModal();
+        document.body.appendChild(modal);
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (document.body.contains(modal)) {
+                document.body.removeChild(modal);
+            }
+        }, 3000);
+    }
+
+    // Create success message modal
+    createSuccessModal() {
+        const modal = document.createElement('div');
+        modal.className = 'whatsapp-success-modal';
+        modal.innerHTML = `
+            <div class="success-modal-content">
+                <div class="success-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <h3>Message Sent Successfully!</h3>
+                <p>Thank you for contacting us. We'll get back to you soon!</p>
+                <button class="btn-close-success">OK</button>
+            </div>
+        `;
+
+        // Add modal styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .whatsapp-success-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10001;
+                animation: fadeIn 0.3s ease;
+            }
+            .success-modal-content {
+                background: white;
+                border-radius: 15px;
+                padding: 2rem;
+                text-align: center;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                animation: slideIn 0.3s ease;
+            }
+            .success-icon {
+                font-size: 3rem;
+                color: #25d366;
+                margin-bottom: 1rem;
+            }
+            .success-modal-content h3 {
+                color: #2c3e50;
+                margin-bottom: 1rem;
+                font-size: 1.3rem;
+            }
+            .success-modal-content p {
+                color: #666;
+                margin-bottom: 1.5rem;
+                line-height: 1.5;
+            }
+            .btn-close-success {
+                background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+                color: white;
+                padding: 0.75rem 2rem;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: transform 0.3s;
+            }
+            .btn-close-success:hover {
+                transform: translateY(-2px);
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideIn {
+                from { transform: translateY(-50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Close modal on button click
+        modal.querySelector('.btn-close-success').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+
+        return modal;
     }
 
     // Force reload settings (useful for testing)
@@ -293,17 +387,13 @@ class WhatsAppManager {
         document.querySelectorAll('.whatsapp-btn, .btn-whatsapp[data-message]').forEach(button => {
             button.addEventListener('click', async (e) => {
                 e.preventDefault();
-                console.log('WhatsApp button clicked, loading settings...');
 
                 // Ensure settings are loaded before proceeding
                 if (!this.settingsLoaded) {
-                    console.log('Settings not loaded, loading now...');
                     await this.loadSettings();
                 }
 
                 const message = button.dataset.message || 'Hello, I am interested in your products.';
-                console.log('Sending message:', message);
-                console.log('Current method:', this.settings.method);
 
                 await this.sendMessage(message);
             });
@@ -316,17 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.whatsappManager = new WhatsAppManager();
     window.whatsappManager.initButtons();
 
-    // Debug: Log settings after a delay
-    setTimeout(async () => {
-        if (window.whatsappManager) {
-            console.log('=== WhatsApp Manager Debug ===');
-            console.log('Settings loaded:', window.whatsappManager.settingsLoaded);
-            console.log('Current settings:', window.whatsappManager.settings);
-            console.log('Method:', window.whatsappManager.settings?.method);
-            console.log('Will use:', window.whatsappManager.settings?.method === 'api' ? 'API CALL' : 'DIRECT WHATSAPP');
-            console.log('=============================');
-        }
-    }, 2000);
 });
 
 // Export for use in other scripts

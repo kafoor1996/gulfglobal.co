@@ -1,15 +1,90 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once 'includes/auth.php';
 
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit();
-}
+// Check if admin is logged in and has permission to view products
+requireLogin();
+requirePermission('view_products');
+
+// Refresh session variables if needed
+refreshSession();
 
 $pdo = getConnection();
 $message = '';
+
+// Display success message from session
+if (isset($_SESSION['success_message'])) {
+    $message = '<div class="success">' . $_SESSION['success_message'] . '</div>';
+    unset($_SESSION['success_message']);
+}
+
+// Image upload functions
+function handleImageUpload($file, $product_id, $type = 'gallery') {
+    $upload_dir = '../images/products/';
+    if (!file_exists($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
+    }
+
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $max_size = 5 * 1024 * 1024; // 5MB
+
+    if (!in_array($file['type'], $allowed_types)) {
+        return ['success' => false, 'message' => 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'];
+    }
+
+    if ($file['size'] > $max_size) {
+        return ['success' => false, 'message' => 'File size too large. Maximum 5MB allowed.'];
+    }
+
+    $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = 'product_' . $product_id . '_' . $type . '_' . time() . '.' . $file_extension;
+    $file_path = $upload_dir . $filename;
+
+    if (move_uploaded_file($file['tmp_name'], $file_path)) {
+        // Save to product_images table
+        global $pdo;
+        $stmt = $pdo->prepare("INSERT INTO product_images (product_id, image_path, image_type, sort_order) VALUES (?, ?, ?, 0)");
+        $stmt->execute([$product_id, 'images/products/' . $filename, $type]);
+
+        return ['success' => true, 'path' => 'images/products/' . $filename];
+    } else {
+        return ['success' => false, 'message' => 'Failed to upload file.'];
+    }
+}
+
+function handleMultipleImageUpload($files, $product_id) {
+    global $pdo;
+
+    $upload_dir = '../images/products/';
+    if (!file_exists($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
+    }
+
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $max_size = 5 * 1024 * 1024; // 5MB
+
+    for ($i = 0; $i < count($files['name']); $i++) {
+        if ($files['error'][$i] == 0) {
+            if (!in_array($files['type'][$i], $allowed_types)) {
+                continue; // Skip invalid files
+            }
+
+            if ($files['size'][$i] > $max_size) {
+                continue; // Skip oversized files
+            }
+
+            $file_extension = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
+            $filename = 'product_' . $product_id . '_gallery_' . time() . '_' . $i . '.' . $file_extension;
+            $file_path = $upload_dir . $filename;
+
+            if (move_uploaded_file($files['tmp_name'][$i], $file_path)) {
+                // Save to database
+                $stmt = $pdo->prepare("INSERT INTO product_images (product_id, image_path, image_type, sort_order) VALUES (?, ?, 'gallery', ?)");
+                $stmt->execute([$product_id, 'images/products/' . $filename, $i]);
+            }
+        }
+    }
+}
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -26,7 +101,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (!empty($name) && $price > 0 && $category_id > 0) {
                     $stmt = $pdo->prepare("INSERT INTO products (name, description, price, category_id, subcategory_id, is_hot_sale) VALUES (?, ?, ?, ?, ?, ?)");
                     if ($stmt->execute([$name, $description, $price, $category_id, $subcategory_id, $is_hot_sale])) {
-                        $message = '<div class="success">Product added successfully!</div>';
+                        $product_id = $pdo->lastInsertId();
+
+                        // Handle image upload
+                        if (isset($_FILES['main_image']) && $_FILES['main_image']['error'] == 0) {
+                            $upload_result = handleImageUpload($_FILES['main_image'], $product_id, 'main');
+                            if ($upload_result['success']) {
+                                $stmt = $pdo->prepare("UPDATE products SET main_image = ? WHERE id = ?");
+                                $stmt->execute([$upload_result['path'], $product_id]);
+                            }
+                        }
+
+                        // Handle gallery images
+                        if (isset($_FILES['gallery_images']) && !empty($_FILES['gallery_images']['name'][0])) {
+                            handleMultipleImageUpload($_FILES['gallery_images'], $product_id);
+                        }
+
+                        $_SESSION['success_message'] = 'Product added successfully!';
+                        header('Location: products.php');
+                        exit();
                     } else {
                         $message = '<div class="error">Failed to add product.</div>';
                     }
@@ -46,7 +139,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, subcategory_id = ?, is_hot_sale = ? WHERE id = ?");
                 if ($stmt->execute([$name, $description, $price, $category_id, $subcategory_id, $is_hot_sale, $id])) {
-                    $message = '<div class="success">Product updated successfully!</div>';
+                    // Handle main image upload
+                    if (isset($_FILES['main_image']) && $_FILES['main_image']['error'] == 0) {
+                        $upload_result = handleImageUpload($_FILES['main_image'], $id, 'main');
+                        if ($upload_result['success']) {
+                            $stmt = $pdo->prepare("UPDATE products SET main_image = ? WHERE id = ?");
+                            $stmt->execute([$upload_result['path'], $id]);
+                        }
+                    }
+
+                    // Handle gallery images
+                    if (isset($_FILES['gallery_images']) && !empty($_FILES['gallery_images']['name'][0])) {
+                        handleMultipleImageUpload($_FILES['gallery_images'], $id);
+                    }
+
+                    $_SESSION['success_message'] = 'Product updated successfully!';
+                    header('Location: products.php');
+                    exit();
                 } else {
                     $message = '<div class="error">Failed to update product.</div>';
                 }
@@ -56,7 +165,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $id = intval($_POST['id']);
                 $stmt = $pdo->prepare("UPDATE products SET is_active = 0 WHERE id = ?");
                 if ($stmt->execute([$id])) {
-                    $message = '<div class="success">Product deleted successfully!</div>';
+                    $_SESSION['success_message'] = 'Product deleted successfully!';
+                    header('Location: products.php');
+                    exit();
                 } else {
                     $message = '<div class="error">Failed to delete product.</div>';
                 }
@@ -95,7 +206,8 @@ if ($hot_sale_filter === '1') {
 }
 
 $where_clause = implode(' AND ', $where_conditions);
-$sql = "SELECT p.*, c.name as category_name, s.name as subcategory_name
+$sql = "SELECT p.*, c.name as category_name, s.name as subcategory_name,
+               (SELECT image_path FROM product_images WHERE product_id = p.id AND image_type = 'main' AND is_active = 1 LIMIT 1) as main_image
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories s ON p.subcategory_id = s.id
@@ -110,6 +222,14 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $stmt = $pdo->query("SELECT id, name, category_id FROM subcategories WHERE is_active = 1 ORDER BY sort_order, name");
 $subcategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Function to get product images
+function getProductImages($product_id) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM product_images WHERE product_id = ? AND is_active = 1 ORDER BY image_type, sort_order");
+    $stmt->execute([$product_id]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Group subcategories by category
 $subcategories_by_category = [];
@@ -217,6 +337,23 @@ foreach ($subcategories as $subcategory) {
             display: flex;
             align-items: center;
             gap: 15px;
+        }
+
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .role-badge {
+            background: #4ade80;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-top: 2px;
         }
 
         .admin-avatar {
@@ -424,11 +561,13 @@ foreach ($subcategories as $subcategory) {
 
         .modal-content {
             background: white;
-            margin: 5% auto;
+            margin: 2% auto;
             padding: 30px;
             border-radius: 10px;
-            width: 90%;
-            max-width: 500px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-header {
@@ -479,6 +618,92 @@ foreach ($subcategories as $subcategory) {
         .form-group textarea {
             height: 80px;
             resize: vertical;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        .form-col-6 {
+            flex: 0 0 calc(50% - 10px);
+        }
+
+        .form-col-12 {
+            flex: 0 0 100%;
+        }
+
+        .image-preview-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .image-preview-section h4 {
+            margin: 0 0 15px 0;
+            color: #2c5aa0;
+            font-size: 1rem;
+        }
+
+        .current-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .image-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e9ecef;
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-item .image-type {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            background: rgba(44, 90, 160, 0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .image-item .delete-image {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(220, 53, 69, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-item .delete-image:hover {
+            background: rgba(220, 53, 69, 1);
         }
 
         .checkbox-group {
@@ -547,6 +772,20 @@ foreach ($subcategories as $subcategory) {
             .filter-group {
                 min-width: 100%;
             }
+
+            .modal-content {
+                width: 98%;
+                margin: 1% auto;
+                padding: 15px;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .form-col-6 {
+                flex: 0 0 100%;
+            }
         }
     </style>
 </head>
@@ -559,27 +798,16 @@ foreach ($subcategories as $subcategory) {
                 <p>Gulf Global Co</p>
             </div>
             <nav class="sidebar-menu">
-                <a href="dashboard.php" class="menu-item">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                <?php
+                $menuItems = getMenuItems();
+                $currentPage = basename($_SERVER['PHP_SELF']);
+                foreach ($menuItems as $item):
+                    $isActive = ($currentPage === $item['url']);
+                ?>
+                <a href="<?php echo $item['url']; ?>" class="menu-item <?php echo $isActive ? 'active' : ''; ?>">
+                    <i class="<?php echo $item['icon']; ?>"></i> <?php echo $item['name']; ?>
                 </a>
-                <a href="products.php" class="menu-item active">
-                    <i class="fas fa-box"></i> Products
-                </a>
-                <a href="categories.php" class="menu-item">
-                    <i class="fas fa-tags"></i> Categories
-                </a>
-                <a href="subcategories.php" class="menu-item">
-                    <i class="fas fa-list"></i> Subcategories
-                </a>
-                <a href="hot-sale.php" class="menu-item">
-                    <i class="fas fa-fire"></i> Hot Sale
-                </a>
-                <a href="orders.php" class="menu-item">
-                    <i class="fas fa-shopping-cart"></i> Orders
-                </a>
-                <a href="settings.php" class="menu-item">
-                    <i class="fas fa-cog"></i> Settings
-                </a>
+                <?php endforeach; ?>
             </nav>
         </div>
 
@@ -591,7 +819,10 @@ foreach ($subcategories as $subcategory) {
                     <div class="admin-avatar">
                         <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
                     </div>
-                    <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                    <div class="admin-details">
+                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                        <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
+                    </div>
                     <a href="logout.php" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
@@ -654,6 +885,7 @@ foreach ($subcategories as $subcategory) {
                     <table>
                         <thead>
                             <tr>
+                                <th>Image</th>
                                 <th>Name</th>
                                 <th>Category</th>
                                 <th>Subcategory</th>
@@ -665,6 +897,18 @@ foreach ($subcategories as $subcategory) {
                         <tbody>
                             <?php foreach ($products as $product): ?>
                                 <tr>
+                                    <td>
+                                        <?php if (!empty($product['main_image'])): ?>
+                                            <img src="../<?php echo htmlspecialchars($product['main_image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 5px; display: none; align-items: center; justify-content: center; color: #999;">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        <?php else: ?>
+                                            <div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: #999;">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <div class="product-name"><?php echo htmlspecialchars($product['name']); ?></div>
                                         <div style="font-size: 0.8rem; color: #666;"><?php echo htmlspecialchars(substr($product['description'], 0, 50)) . '...'; ?></div>
@@ -709,46 +953,89 @@ foreach ($subcategories as $subcategory) {
                 <h3 id="modalTitle">Add Product</h3>
                 <span class="close" onclick="closeModal()">&times;</span>
             </div>
-            <form id="productForm" method="POST">
+            <form id="productForm" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" id="formAction" value="add">
                 <input type="hidden" name="id" id="productId" value="">
 
-                <div class="form-group">
-                    <label for="name">Product Name *</label>
-                    <input type="text" id="name" name="name" required>
+                <div class="form-row">
+                    <div class="form-col form-col-6">
+                        <div class="form-group">
+                            <label for="name">Product Name *</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                    </div>
+                    <div class="form-col form-col-6">
+                        <div class="form-group">
+                            <label for="price">Price (₹) *</label>
+                            <input type="number" id="price" name="price" step="0.01" min="0" required>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description"></textarea>
+                <div class="form-row">
+                    <div class="form-col form-col-6">
+                        <div class="form-group">
+                            <label for="product_category_id">Category *</label>
+                            <select id="product_category_id" name="category_id" required onchange="updateSubcategories()">
+                                <option value="">Select Category</option>
+                                <?php foreach ($categories as $category): ?>
+                                    <option value="<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col form-col-6">
+                        <div class="form-group">
+                            <label for="product_subcategory_id">Subcategory</label>
+                            <select id="product_subcategory_id" name="subcategory_id">
+                                <option value="">Select Subcategory (Optional)</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="price">Price (₹) *</label>
-                    <input type="number" id="price" name="price" step="0.01" min="0" required>
+                <div class="form-row">
+                    <div class="form-col form-col-12">
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description"></textarea>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="product_category_id">Category *</label>
-                    <select id="product_category_id" name="category_id" required onchange="updateSubcategories()">
-                        <option value="">Select Category</option>
-                        <?php foreach ($categories as $category): ?>
-                            <option value="<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                <div class="form-row">
+                    <div class="form-col form-col-6">
+                        <div class="form-group">
+                            <label for="main_image">Main Product Image</label>
+                            <input type="file" id="main_image" name="main_image" accept="image/*">
+                            <small style="color: #666; font-size: 0.8rem;">Recommended: 800x600px, max 5MB</small>
+                        </div>
+                    </div>
+                    <div class="form-col form-col-6">
+                        <div class="form-group">
+                            <label for="gallery_images">Gallery Images</label>
+                            <input type="file" id="gallery_images" name="gallery_images[]" accept="image/*" multiple>
+                            <small style="color: #666; font-size: 0.8rem;">Select multiple images for product gallery</small>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="product_subcategory_id">Subcategory</label>
-                    <select id="product_subcategory_id" name="subcategory_id">
-                        <option value="">Select Subcategory (Optional)</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-col form-col-12">
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="is_hot_sale" name="is_hot_sale">
+                                <label for="is_hot_sale">Mark as Hot Sale</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="is_hot_sale" name="is_hot_sale">
-                        <label for="is_hot_sale">Mark as Hot Sale</label>
+                <!-- Current Images Preview -->
+                <div id="current-images-section" class="image-preview-section" style="display: none;">
+                    <h4>Current Images</h4>
+                    <div id="current-images" class="current-images">
+                        <!-- Images will be loaded here via JavaScript -->
                     </div>
                 </div>
 
@@ -788,15 +1075,12 @@ foreach ($subcategories as $subcategory) {
             const subcategorySelect = document.getElementById('product_subcategory_id');
             const categoryId = categorySelect.value;
 
-            console.log('Updating subcategories for category ID:', categoryId);
-            console.log('Available subcategories data:', subcategoriesData);
 
             // Clear existing options
             subcategorySelect.innerHTML = '<option value="">Select Subcategory (Optional)</option>';
 
             // Add subcategories for selected category
             if (categoryId && subcategoriesData[categoryId]) {
-                console.log('Found subcategories for category:', subcategoriesData[categoryId]);
                 subcategoriesData[categoryId].forEach(subcategory => {
                     const option = document.createElement('option');
                     option.value = subcategory.id;
@@ -804,7 +1088,6 @@ foreach ($subcategories as $subcategory) {
                     subcategorySelect.appendChild(option);
                 });
             } else {
-                console.log('No subcategories found for category ID:', categoryId);
             }
         }
 
@@ -846,6 +1129,9 @@ foreach ($subcategories as $subcategory) {
                 document.getElementById('product_category_id').value = product.category_id || '';
                 document.getElementById('is_hot_sale').checked = product.is_hot_sale == 1;
 
+                // Load current images
+                loadCurrentImages(product.id);
+
                 // Update subcategories and set selected value
                 setTimeout(() => {
                     updateSubcategories();
@@ -860,14 +1146,100 @@ foreach ($subcategories as $subcategory) {
                 document.getElementById('formAction').value = 'add';
                 form.reset();
                 updateSubcategories();
+
+                // Hide current images section for new products
+                document.getElementById('current-images-section').style.display = 'none';
             }
 
             modal.style.display = 'block';
         }
 
+        function loadCurrentImages(productId) {
+            if (!productId) return;
+
+            fetch(`get-product-images.php?id=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('current-images');
+                    const section = document.getElementById('current-images-section');
+
+                    if (data.length > 0) {
+                        container.innerHTML = '';
+                        data.forEach(image => {
+                            const imageItem = document.createElement('div');
+                            imageItem.className = 'image-item';
+                            imageItem.innerHTML = `
+                                <img src="../${image.image_path}" alt="Product Image" onerror="this.parentElement.style.display='none'">
+                                <div class="image-type">${image.image_type}</div>
+                                <button type="button" class="delete-image" onclick="deleteImage(${image.id}, this)" title="Delete Image">×</button>
+                            `;
+                            container.appendChild(imageItem);
+                        });
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading images:', error);
+                    document.getElementById('current-images-section').style.display = 'none';
+                });
+        }
+
+        function deleteImage(imageId, button) {
+            if (confirm('Are you sure you want to delete this image?')) {
+                fetch('delete-image.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `image_id=${imageId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.parentElement.remove();
+                        // Hide section if no images left
+                        const container = document.getElementById('current-images');
+                        if (container.children.length === 0) {
+                            document.getElementById('current-images-section').style.display = 'none';
+                        }
+                    } else {
+                        alert('Error deleting image: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting image');
+                });
+            }
+        }
+
         function closeModal() {
             document.getElementById('productModal').style.display = 'none';
         }
+
+        // Prevent double form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('productForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Saving...';
+                        submitBtn.style.opacity = '0.6';
+
+                        // Re-enable button after 5 seconds in case of errors
+                        setTimeout(function() {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Save Product';
+                            submitBtn.style.opacity = '1';
+                        }, 5000);
+                    }
+                });
+            }
+        });
 
         function editProduct(product) {
             openModal(product);

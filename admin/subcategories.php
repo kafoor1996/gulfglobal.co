@@ -1,14 +1,24 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once 'includes/auth.php';
 
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit();
-}
+// Check if admin is logged in and has appropriate permissions
+requireLogin();
+
+// Refresh session variables if needed
+refreshSession();
 
 $pdo = getConnection();
+// Display success/error messages from session
+$message = '';
+if (isset($_SESSION['success_message'])) {
+    $_SESSION['success_message'] = '' . $_SESSION['success_message'] . ''; header('Location: subcategories.php'); exit();
+    unset($_SESSION['success_message']);
+}
+if (isset($_SESSION['error_message'])) {
+    $_SESSION['error_message'] = '' . $_SESSION['error_message'] . ''; header('Location: subcategories.php'); exit();
+    unset($_SESSION['error_message']);
+}
 $message = '';
 
 // Handle form submissions
@@ -25,12 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $slug = strtolower(str_replace(' ', '-', $name));
                     $stmt = $pdo->prepare("INSERT INTO subcategories (category_id, name, slug, description, sort_order) VALUES (?, ?, ?, ?, ?)");
                     if ($stmt->execute([$category_id, $name, $slug, $description, $sort_order])) {
-                        $message = '<div class="success">Subcategory added successfully!</div>';
+                        $_SESSION['success_message'] = 'Subcategory added successfully!'; header('Location: subcategories.php'); exit();
                     } else {
-                        $message = '<div class="error">Failed to add subcategory.</div>';
+                        $_SESSION['error_message'] = 'Failed to add subcategory.'; header('Location: subcategories.php'); exit();
                     }
                 } else {
-                    $message = '<div class="error">Please fill in all required fields.</div>';
+                    $_SESSION['error_message'] = 'Please fill in all required fields.'; header('Location: subcategories.php'); exit();
                 }
                 break;
 
@@ -45,12 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $slug = strtolower(str_replace(' ', '-', $name));
                     $stmt = $pdo->prepare("UPDATE subcategories SET category_id = ?, name = ?, slug = ?, description = ?, sort_order = ? WHERE id = ?");
                     if ($stmt->execute([$category_id, $name, $slug, $description, $sort_order, $id])) {
-                        $message = '<div class="success">Subcategory updated successfully!</div>';
+                        $_SESSION['success_message'] = 'Subcategory updated successfully!'; header('Location: subcategories.php'); exit();
                     } else {
-                        $message = '<div class="error">Failed to update subcategory.</div>';
+                        $_SESSION['error_message'] = 'Failed to update subcategory.'; header('Location: subcategories.php'); exit();
                     }
                 } else {
-                    $message = '<div class="error">Please fill in all required fields.</div>';
+                    $_SESSION['error_message'] = 'Please fill in all required fields.'; header('Location: subcategories.php'); exit();
                 }
                 break;
 
@@ -59,9 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if ($id > 0) {
                     $stmt = $pdo->prepare("DELETE FROM subcategories WHERE id = ?");
                     if ($stmt->execute([$id])) {
-                        $message = '<div class="success">Subcategory deleted successfully!</div>';
+                        $_SESSION['success_message'] = 'Subcategory deleted successfully!'; header('Location: subcategories.php'); exit();
                     } else {
-                        $message = '<div class="error">Failed to delete subcategory.</div>';
+                        $_SESSION['error_message'] = 'Failed to delete subcategory.'; header('Location: subcategories.php'); exit();
                     }
                 }
                 break;
@@ -181,6 +191,22 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
             display: flex;
             align-items: center;
             gap: 15px;
+        }
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .role-badge {
+            background: #4ade80;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-top: 2px;
         }
 
         .admin-avatar {
@@ -654,7 +680,10 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="admin-avatar">
                         <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
                     </div>
-                    <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                    <div class="admin-details">
+                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                        <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
+                    </div>
                     <a href="logout.php" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>

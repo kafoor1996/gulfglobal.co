@@ -1,17 +1,28 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once 'includes/auth.php';
 
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit();
-}
+// Check if admin is logged in and has permission to view categories
+requireLogin();
+requirePermission('view_categories');
+
+// Refresh session variables if needed
+refreshSession();
 
 $pdo = getConnection();
-$message = '';
 
-// Handle form submissions
+// Display success/error messages from session
+$message = '';
+if (isset($_SESSION['success_message'])) {
+    $message = '<div class="success">' . $_SESSION['success_message'] . '</div>';
+    unset($_SESSION['success_message']);
+}
+if (isset($_SESSION['error_message'])) {
+    $message = '<div class="error">' . $_SESSION['error_message'] . '</div>';
+    unset($_SESSION['error_message']);
+}
+
+// Handle form submissions with POST-Redirect-GET pattern
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
@@ -25,13 +36,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $slug = strtolower(str_replace(' ', '-', $name));
                     $stmt = $pdo->prepare("INSERT INTO categories (name, slug, description, icon, sort_order) VALUES (?, ?, ?, ?, ?)");
                     if ($stmt->execute([$name, $slug, $description, $icon, $sort_order])) {
-                        $message = '<div class="success">Category added successfully!</div>';
+                        $_SESSION['success_message'] = 'Category added successfully!';
                     } else {
-                        $message = '<div class="error">Failed to add category.</div>';
+                        $_SESSION['error_message'] = 'Failed to add category.';
                     }
                 } else {
-                    $message = '<div class="error">Please enter a category name.</div>';
+                    $_SESSION['error_message'] = 'Please enter a category name.';
                 }
+                // Redirect to prevent form resubmission
+                header('Location: categories.php');
+                exit();
                 break;
 
             case 'add_subcategory':
@@ -44,13 +58,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $slug = strtolower(str_replace(' ', '-', $name));
                     $stmt = $pdo->prepare("INSERT INTO subcategories (category_id, name, slug, description, sort_order) VALUES (?, ?, ?, ?, ?)");
                     if ($stmt->execute([$category_id, $name, $slug, $description, $sort_order])) {
-                        $message = '<div class="success">Subcategory added successfully!</div>';
+                        $_SESSION['success_message'] = 'Subcategory added successfully!';
                     } else {
-                        $message = '<div class="error">Failed to add subcategory.</div>';
+                        $_SESSION['error_message'] = 'Failed to add subcategory.';
                     }
                 } else {
-                    $message = '<div class="error">Please fill in all required fields.</div>';
+                    $_SESSION['error_message'] = 'Please fill in all required fields.';
                 }
+                // Redirect to prevent form resubmission
+                header('Location: categories.php');
+                exit();
                 break;
 
             case 'edit_category':
@@ -64,13 +81,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $slug = strtolower(str_replace(' ', '-', $name));
                     $stmt = $pdo->prepare("UPDATE categories SET name = ?, slug = ?, description = ?, icon = ?, sort_order = ? WHERE id = ?");
                     if ($stmt->execute([$name, $slug, $description, $icon, $sort_order, $id])) {
-                        $message = '<div class="success">Category updated successfully!</div>';
+                        $_SESSION['success_message'] = 'Category updated successfully!';
                     } else {
-                        $message = '<div class="error">Failed to update category.</div>';
+                        $_SESSION['error_message'] = 'Failed to update category.';
                     }
                 } else {
-                    $message = '<div class="error">Please fill in all required fields.</div>';
+                    $_SESSION['error_message'] = 'Please fill in all required fields.';
                 }
+                // Redirect to prevent form resubmission
+                header('Location: categories.php');
+                exit();
                 break;
 
             case 'delete_category':
@@ -78,11 +98,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if ($id > 0) {
                     $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
                     if ($stmt->execute([$id])) {
-                        $message = '<div class="success">Category deleted successfully!</div>';
+                        $_SESSION['success_message'] = 'Category deleted successfully!';
                     } else {
-                        $message = '<div class="error">Failed to delete category.</div>';
+                        $_SESSION['error_message'] = 'Failed to delete category.';
                     }
                 }
+                // Redirect to prevent form resubmission
+                header('Location: categories.php');
+                exit();
                 break;
         }
     }
@@ -216,6 +239,22 @@ foreach ($categories as &$category) {
             display: flex;
             align-items: center;
             gap: 15px;
+        }
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .role-badge {
+            background: #4ade80;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-top: 2px;
         }
 
         .admin-avatar {
@@ -648,7 +687,10 @@ foreach ($categories as &$category) {
                     <div class="admin-avatar">
                         <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
                     </div>
-                    <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                    <div class="admin-details">
+                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                        <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
+                    </div>
                     <a href="logout.php" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>

@@ -29,6 +29,7 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
             color: #25d366;
             text-decoration: none;
         }
+
     </style>
 </head>
 <body>
@@ -366,8 +367,7 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <textarea placeholder="Your Message" rows="5" required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">Send Message</button>
-                    <button type="button" class="btn btn-whatsapp" data-message="Hello, I would like to get in touch regarding your products and services.">
+                    <button type="submit" class="btn btn-whatsapp" data-message="Hello, I would like to get in touch regarding your products and services.">
                         <i class="fab fa-whatsapp"></i> Send via WhatsApp
                     </button>
                 </form>

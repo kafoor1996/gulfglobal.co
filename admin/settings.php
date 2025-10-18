@@ -1,16 +1,27 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once 'includes/auth.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit();
-}
+// Check if admin is logged in and has permission to view settings
+requireLogin();
+requirePermission('view_settings');
+
+// Refresh session variables if needed
+refreshSession();
 
 $pdo = getConnection();
+
+// Display success/error messages from session
 $message = '';
 $error = '';
+if (isset($_SESSION['success_message'])) {
+    $message = '<div class="success">' . $_SESSION['success_message'] . '</div>';
+    unset($_SESSION['success_message']);
+}
+if (isset($_SESSION['error_message'])) {
+    $error = '<div class="error">' . $_SESSION['error_message'] . '</div>';
+    unset($_SESSION['error_message']);
+}
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -38,7 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         ");
 
         $stmt->execute([$site_name, $site_email, $site_phone, $site_address, $whatsapp_number, $whatsapp_method]);
-        $message = "Settings updated successfully!";
+        $_SESSION['success_message'] = 'Settings updated successfully!';
+        header('Location: settings.php');
+        exit();
     } catch (PDOException $e) {
         $error = "Error updating settings: " . $e->getMessage();
     }
@@ -57,6 +70,12 @@ try {
 } catch (PDOException $e) {
     $error = "Error fetching settings: " . $e->getMessage();
 }
+
+// Display success message from session
+if (isset($_SESSION['success_message'])) {
+    $message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -64,8 +83,9 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Site Settings - Admin Panel</title>
+    <title>Settings - Gulf Global Co</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -74,71 +94,171 @@ try {
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .admin-container {
+            display: flex;
             min-height: 100vh;
-            padding: 20px;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #2c5aa0 0%, #667eea 100%);
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
             color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #4ade80;
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 0;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            color: #2c5aa0;
+            font-size: 1.8rem;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .role-badge {
+            background: #4ade80;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .content {
             padding: 30px;
-            text-align: center;
         }
 
-        .header h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-        }
-
-        .form-container {
-            padding: 40px;
+        .settings-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
+            margin-bottom: 5px;
+            font-weight: 500;
             color: #333;
         }
 
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 0.9rem;
         }
 
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #2c5aa0;
         }
 
         .form-group textarea {
+            height: 80px;
             resize: vertical;
-            min-height: 100px;
         }
 
         .method-options {
@@ -148,365 +268,157 @@ try {
         }
 
         .method-option {
-            flex: 1;
-            padding: 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .method-option:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-
-        .method-option.selected {
-            border-color: #667eea;
-            background: #f0f4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .method-option input[type="radio"] {
-            display: none;
-        }
-
-        .method-option i {
-            font-size: 2rem;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .test-section {
-            margin-top: 40px;
-            padding: 30px;
-            background: #f8f9ff;
-            border-radius: 15px;
-            border: 2px solid #e0e0e0;
-        }
-
-        .test-section h3 {
-            color: #2c5aa0;
-            margin-bottom: 10px;
-            font-size: 1.3rem;
-        }
-
-        .test-section p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .btn-test {
-            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-test:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
-        }
-
-        .test-results {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background: white;
-            border: 1px solid #e0e0e0;
-            min-height: 50px;
-            font-family: monospace;
-            font-size: 14px;
-        }
-
-        .test-success {
-            background: #d4edda;
-            color: #155724;
-            border-color: #c3e6cb;
-        }
-
-        .test-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
+            width: auto;
         }
 
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2c5aa0;
             color: white;
             border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: #1e3d6f;
         }
 
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success {
+        .success {
             background: #d4edda;
             color: #155724;
-            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
 
-        .alert-error {
+        .error {
             background: #f8d7da;
             color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #667eea;
-            text-decoration: none;
+            padding: 10px;
+            border-radius: 5px;
             margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        .back-btn:hover {
-            color: #5a67d8;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
         }
 
         @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .method-options {
+                flex-direction: column;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-cog"></i> Site Settings</h1>
-            <p>Configure your website settings</p>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+                <p>Gulf Global Co</p>
+            </div>
+            <nav class="sidebar-menu">
+                <?php
+                $menuItems = getMenuItems();
+                $currentPage = basename($_SERVER['PHP_SELF']);
+                foreach ($menuItems as $item):
+                    $isActive = ($currentPage === $item['url']);
+                ?>
+                <a href="<?php echo $item['url']; ?>" class="menu-item <?php echo $isActive ? 'active' : ''; ?>">
+                    <i class="<?php echo $item['icon']; ?>"></i> <?php echo $item['name']; ?>
+                </a>
+                <?php endforeach; ?>
+            </nav>
         </div>
 
-        <div class="form-container">
-            <a href="dashboard.php" class="back-btn">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-
-            <?php if ($message): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($error): ?>
-                <div class="alert alert-error">
-                    <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
-                </div>
-            <?php endif; ?>
-
-            <form method="POST">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="site_name">Site Name</label>
-                        <input type="text" id="site_name" name="site_name"
-                               value="<?php echo htmlspecialchars($settings['site_name'] ?? 'Gulf Global Co'); ?>"
-                               placeholder="Enter site name">
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <h1>Site Settings</h1>
+                <div class="admin-info">
+                    <div class="admin-avatar">
+                        <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
                     </div>
-                    <div class="form-group">
-                        <label for="site_email">Contact Email</label>
-                        <input type="email" id="site_email" name="site_email"
-                               value="<?php echo htmlspecialchars($settings['site_email'] ?? ''); ?>"
-                               placeholder="Enter contact email">
+                    <div class="admin-details">
+                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                        <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
                     </div>
+                    <a href="logout.php" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 </div>
+            </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="site_phone">Phone Number</label>
-                        <input type="tel" id="site_phone" name="site_phone"
-                               value="<?php echo htmlspecialchars($settings['site_phone'] ?? ''); ?>"
-                               placeholder="Enter phone number">
-                    </div>
-                    <div class="form-group">
-                        <label for="whatsapp_number">WhatsApp Number</label>
-                        <input type="tel" id="whatsapp_number" name="whatsapp_number"
-                               value="<?php echo htmlspecialchars($settings['whatsapp_number'] ?? ''); ?>"
-                               placeholder="Enter WhatsApp number">
-                    </div>
+            <div class="content">
+                <?php if ($message): ?>
+                    <div class="success"><?php echo $message; ?></div>
+                <?php endif; ?>
+
+                <?php if ($error): ?>
+                    <div class="error"><?php echo $error; ?></div>
+                <?php endif; ?>
+
+                <div class="settings-form">
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="site_name">Site Name</label>
+                            <input type="text" id="site_name" name="site_name" value="<?php echo htmlspecialchars($settings['site_name'] ?? ''); ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="site_email">Site Email</label>
+                            <input type="email" id="site_email" name="site_email" value="<?php echo htmlspecialchars($settings['site_email'] ?? ''); ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="site_phone">Site Phone</label>
+                            <input type="tel" id="site_phone" name="site_phone" value="<?php echo htmlspecialchars($settings['site_phone'] ?? ''); ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="site_address">Site Address</label>
+                            <textarea id="site_address" name="site_address" required><?php echo htmlspecialchars($settings['site_address'] ?? ''); ?></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="whatsapp_number">WhatsApp Number</label>
+                            <input type="tel" id="whatsapp_number" name="whatsapp_number" value="<?php echo htmlspecialchars($settings['whatsapp_number'] ?? ''); ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>WhatsApp Method</label>
+                            <div class="method-options">
+                                <div class="method-option">
+                                    <input type="radio" id="direct" name="whatsapp_method" value="direct" <?php echo ($settings['whatsapp_method'] ?? 'direct') == 'direct' ? 'checked' : ''; ?>>
+                                    <label for="direct">Direct Link</label>
+                                </div>
+                                <div class="method-option">
+                                    <input type="radio" id="api" name="whatsapp_method" value="api" <?php echo ($settings['whatsapp_method'] ?? '') == 'api' ? 'checked' : ''; ?>>
+                                    <label for="api">API Integration</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </form>
                 </div>
-
-                <div class="form-group">
-                    <label for="site_address">Address</label>
-                    <textarea id="site_address" name="site_address"
-                              placeholder="Enter full address"><?php echo htmlspecialchars($settings['site_address'] ?? ''); ?></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>WhatsApp Method</label>
-                    <div class="method-options">
-                        <label class="method-option <?php echo ($settings['whatsapp_method'] ?? 'direct') == 'direct' ? 'selected' : ''; ?>">
-                            <input type="radio" name="whatsapp_method" value="direct" <?php echo ($settings['whatsapp_method'] ?? 'direct') == 'direct' ? 'checked' : ''; ?>>
-                            <i class="fas fa-link"></i>
-                            <h3>Direct Link</h3>
-                            <p>Open WhatsApp directly with pre-filled message</p>
-                        </label>
-                        <label class="method-option <?php echo ($settings['whatsapp_method'] ?? '') == 'api' ? 'selected' : ''; ?>">
-                            <input type="radio" name="whatsapp_method" value="api" <?php echo ($settings['whatsapp_method'] ?? '') == 'api' ? 'checked' : ''; ?>>
-                            <i class="fas fa-code"></i>
-                            <h3>API Call</h3>
-                            <p>Send messages via WhatsApp API</p>
-                        </label>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn">
-                    <i class="fas fa-save"></i> Save Settings
-                </button>
-
-                <div class="test-section">
-                    <h3 id="whatsapp-test-title"><i class="fas fa-flask"></i> WhatsApp Testing - Loading...</h3>
-                    <p>Test the WhatsApp functionality with current settings from database</p>
-                    <button type="button" class="btn btn-test" id="test-whatsapp">
-                        <i class="fab fa-whatsapp"></i> Test WhatsApp
-                    </button>
-                    <div id="test-results" class="test-results"></div>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-
-    <script>
-        // Load current WhatsApp method and update title
-        async function loadWhatsAppMethod() {
-            try {
-                const response = await fetch('../api/whatsapp-settings.php?t=' + Date.now());
-                const settings = await response.json();
-
-                const titleElement = document.getElementById('whatsapp-test-title');
-                const method = settings.method.toUpperCase();
-                titleElement.innerHTML = `<i class="fas fa-flask"></i> WhatsApp Testing - ${method}`;
-
-            } catch (error) {
-                const titleElement = document.getElementById('whatsapp-test-title');
-                titleElement.innerHTML = `<i class="fas fa-flask"></i> WhatsApp Testing - Error`;
-            }
-        }
-
-        // Load method when page loads
-        document.addEventListener('DOMContentLoaded', loadWhatsAppMethod);
-
-        // Handle method selection
-        document.querySelectorAll('input[name="whatsapp_method"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                // Update visual selection
-                document.querySelectorAll('.method-option').forEach(option => {
-                    option.classList.remove('selected');
-                });
-                this.closest('.method-option').classList.add('selected');
-            });
-        });
-
-        // WhatsApp Testing
-        document.getElementById('test-whatsapp').addEventListener('click', async function() {
-            const resultsDiv = document.getElementById('test-results');
-            resultsDiv.innerHTML = 'Testing WhatsApp method...';
-            resultsDiv.className = 'test-results';
-
-            try {
-                // Get method from database
-                const response = await fetch('../api/whatsapp-settings.php?t=' + Date.now());
-                const settings = await response.json();
-
-                const method = settings.method.toUpperCase();
-                resultsDiv.innerHTML = `Testing ${method} Method...`;
-
-                if (settings.method === 'api') {
-                    // Test API method with your JSON
-                    resultsDiv.innerHTML += '\n\n📤 Sending API test message...';
-
-                    const testData = {
-                        number: "919789350475",
-                        type: "text",
-                        message: "hello testing from admin",
-                        instance_id: "68F32BAC7AB86",
-                        access_token: "68dbd933b8e16"
-                    };
-
-                    const apiResponse = await fetch('../api/send-whatsapp.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            message: testData.message
-                        })
-                    });
-
-                    const responseText = await apiResponse.text();
-                    console.log('Raw API Response:', responseText);
-
-                    let result;
-                    try {
-                        result = JSON.parse(responseText);
-                    } catch (parseError) {
-                        resultsDiv.innerHTML += '\n❌ JSON Parse Error!';
-                        resultsDiv.innerHTML += '\n🔍 Raw Response: ' + responseText;
-                        resultsDiv.innerHTML += '\n🔍 Parse Error: ' + parseError.message;
-                        resultsDiv.className = 'test-results test-error';
-                        return;
-                    }
-
-                    if (result.success) {
-                        resultsDiv.innerHTML += '\n✅ API Test Successful!';
-                        resultsDiv.innerHTML += '\n📱 Message sent via dealsms API';
-                        resultsDiv.innerHTML += '\n📊 Response: ' + JSON.stringify(result);
-                        resultsDiv.className = 'test-results test-success';
-                    } else {
-                        resultsDiv.innerHTML += '\n❌ API Test Failed!';
-                        resultsDiv.innerHTML += '\n🔍 Error: ' + result.error;
-                        resultsDiv.className = 'test-results test-error';
-                    }
-
-                } else {
-                    // Test Direct method - open WhatsApp
-                    resultsDiv.innerHTML += '\n\n📱 Opening WhatsApp directly...';
-
-                    const adminNumber = "919789350475";
-                    const testMessage = "hello testing from admin";
-                    const whatsappUrl = `https://wa.me/${adminNumber}?text=${encodeURIComponent(testMessage)}`;
-
-                    // Open WhatsApp
-                    window.open(whatsappUrl, '_blank');
-
-                    resultsDiv.innerHTML += '\n✅ Direct Test Successful!';
-                    resultsDiv.innerHTML += '\n📱 WhatsApp opened with message';
-                    resultsDiv.innerHTML += '\n🔗 URL: ' + whatsappUrl;
-                    resultsDiv.className = 'test-results test-success';
-                }
-
-            } catch (error) {
-                resultsDiv.innerHTML += '\n❌ Test Failed: ' + error.message;
-                resultsDiv.className = 'test-results test-error';
-            }
-        });
-    </script>
 </body>
 </html>
