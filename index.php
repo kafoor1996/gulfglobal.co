@@ -68,11 +68,29 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <span class="bar"></span>
             </div>
             <ul class="nav-menu" id="nav-menu">
+                <!-- Mobile Search -->
+                <li class="mobile-search">
+                    <div class="mobile-search-container">
+                        <input type="text" class="mobile-search-input" placeholder="Search products..." id="mobile-search-input">
+                        <button class="mobile-search-btn" id="mobile-search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#hot-sale" class="nav-link">Hot Sale</a>
+                </li>
                 <li class="nav-item">
                     <a href="index.php#home" class="nav-link">Home</a>
                 </li>
                 <li class="nav-item">
                     <a href="index.php#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#quality" class="nav-link">Quality</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#contact" class="nav-link">Contact</a>
                 </li>
                 <?php
                 // Generate dynamic navigation from database
@@ -126,12 +144,6 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </ul>
                 </li>
                 <?php endif; ?>
-                <li class="nav-item">
-                    <a href="index.php#quality" class="nav-link">Quality</a>
-                </li>
-                <li class="nav-item">
-                    <a href="index.php#contact" class="nav-link">Contact</a>
-                </li>
             </ul>
             <div class="nav-actions">
                 <a href="index.php#hot-sale" class="nav-link hot-sale-link" title="Hot Sale">

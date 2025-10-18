@@ -793,11 +793,16 @@ document.addEventListener('DOMContentLoaded', function() {
             navMenu.classList.toggle('active');
         });
 
-        // Close mobile menu when clicking on a nav link
+        // Close mobile menu when clicking on a nav link (but not dropdown toggles or dropdown links)
         document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                hamburger.classList.remove('active');
-                navMenu.classList.remove('active');
+            link.addEventListener('click', (e) => {
+                // Don't close menu if it's a dropdown toggle or dropdown link
+                if (!link.classList.contains('dropdown-toggle') &&
+                    !link.classList.contains('dropdown-link') &&
+                    !link.classList.contains('submenu-link')) {
+                    hamburger.classList.remove('active');
+                    navMenu.classList.remove('active');
+                }
             });
         });
 
@@ -872,6 +877,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+    });
+});
+
+// Mobile Dropdown Toggle Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle mobile dropdown toggles
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Only handle on mobile/tablet
+            if (window.innerWidth <= 768) {
+                const dropdown = this.nextElementSibling;
+                if (dropdown && dropdown.classList.contains('dropdown-menu')) {
+                    // Close other dropdowns
+                    document.querySelectorAll('.dropdown-menu.active').forEach(activeDropdown => {
+                        if (activeDropdown !== dropdown) {
+                            activeDropdown.classList.remove('active');
+                        }
+                    });
+
+                    // Toggle current dropdown
+                    dropdown.classList.toggle('active');
+                }
+            }
+        });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu.active').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            }
+        }
     });
 });
 
