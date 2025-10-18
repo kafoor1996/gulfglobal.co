@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Test Page</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .btn:hover {
+            background: #128c7e;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1><i class="fab fa-whatsapp"></i> WhatsApp Test Page</h1>
+        <p>This page tests the WhatsApp functionality with current settings.</p>
+
+        <h2>Test Buttons</h2>
+        <button class="btn whatsapp-btn" data-message="Test message from debug page">
+            <i class="fab fa-whatsapp"></i> Test WhatsApp Button
+        </button>
+
+        <button class="btn btn-whatsapp" data-message="Another test message">
+            <i class="fab fa-whatsapp"></i> Test Buy Now Button
+        </button>
+
+        <h2>Debug Information</h2>
+        <div id="debug-info" class="debug-info">Loading...</div>
+
+        <button class="btn" onclick="testAPI()">Test API Endpoint</button>
+        <button class="btn" onclick="testWhatsAppManager()">Test WhatsApp Manager</button>
+    </div>
+
+    <script src="js/whatsapp.js?v=1.2"></script>
+    <script>
+        async function testAPI() {
+            const debugDiv = document.getElementById('debug-info');
+            try {
+                const response = await fetch('api/whatsapp-settings.php?t=' + Date.now());
+                const settings = await response.json();
+                debugDiv.textContent = 'API Response:\n' + JSON.stringify(settings, null, 2);
+            } catch (error) {
+                debugDiv.textContent = 'API Error: ' + error.message;
+            }
+        }
+
+        async function testWhatsAppManager() {
+            const debugDiv = document.getElementById('debug-info');
+            if (window.whatsappManager) {
+                debugDiv.textContent = 'WhatsApp Manager:\n' +
+                    'Settings Loaded: ' + window.whatsappManager.settingsLoaded + '\n' +
+                    'Current Settings: ' + JSON.stringify(window.whatsappManager.settings, null, 2);
+            } else {
+                debugDiv.textContent = 'WhatsApp Manager not found';
+            }
+        }
+
+        // Auto-load debug info
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                testAPI();
+                setTimeout(testWhatsAppManager, 1000);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

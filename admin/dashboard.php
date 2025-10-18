@@ -1,0 +1,426 @@
+<?php
+session_start();
+require_once '../config/database.php';
+
+// Check if admin is logged in
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header('Location: login.php');
+    exit();
+}
+
+// Get statistics
+$pdo = getConnection();
+$stats = [];
+
+// Total products
+$stmt = $pdo->query("SELECT COUNT(*) FROM products WHERE is_active = 1");
+$stats['total_products'] = $stmt->fetchColumn();
+
+// Hot sale products
+$stmt = $pdo->query("SELECT COUNT(*) FROM products WHERE is_hot_sale = 1 AND is_active = 1");
+$stats['hot_sale_products'] = $stmt->fetchColumn();
+
+// Products by category
+$stmt = $pdo->query("SELECT category, COUNT(*) as count FROM products WHERE is_active = 1 GROUP BY category");
+$stats['by_category'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Recent products
+$stmt = $pdo->query("SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC LIMIT 5");
+$recent_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Gulf Global Co</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #4ade80;
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 0;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            color: #2c5aa0;
+            font-size: 1.8rem;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        /* Content Area */
+        .content {
+            padding: 30px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.products { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-icon.hot-sale { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-icon.categories { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+
+        .stat-content h3 {
+            font-size: 2rem;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+        }
+
+        .stat-content p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Recent Products */
+        .recent-products {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .recent-products h3 {
+            color: #2c5aa0;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .product-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .product-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .product-price {
+            color: #2c5aa0;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .product-badge {
+            background: #4ade80;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            background: white;
+            border: 2px solid #2c5aa0;
+            color: #2c5aa0;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background: #2c5aa0;
+            color: white;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+                <p>Gulf Global Co</p>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="dashboard.php" class="menu-item active">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="products.php" class="menu-item">
+                    <i class="fas fa-box"></i> Products
+                </a>
+                <a href="categories.php" class="menu-item">
+                    <i class="fas fa-tags"></i> Categories
+                </a>
+                <a href="subcategories.php" class="menu-item">
+                    <i class="fas fa-list"></i> Subcategories
+                </a>
+                <a href="hot-sale.php" class="menu-item">
+                    <i class="fas fa-fire"></i> Hot Sale
+                </a>
+                <a href="orders.php" class="menu-item">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a>
+                <a href="whatsapp-settings.php" class="menu-item">
+                    <i class="fab fa-whatsapp"></i> WhatsApp Settings
+                </a>
+                <a href="settings.php" class="menu-item">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <h1>Dashboard</h1>
+                <div class="admin-info">
+                    <div class="admin-avatar">
+                        <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
+                    </div>
+                    <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                    <a href="logout.php" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon products">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3><?php echo $stats['total_products']; ?></h3>
+                            <p>Total Products</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon hot-sale">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3><?php echo $stats['hot_sale_products']; ?></h3>
+                            <p>Hot Sale Products</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon categories">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3><?php echo count($stats['by_category']); ?></h3>
+                            <p>Categories</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Products -->
+                <div class="recent-products">
+                    <h3><i class="fas fa-clock"></i> Recent Products</h3>
+                    <?php foreach ($recent_products as $product): ?>
+                        <div class="product-item">
+                            <div class="product-info">
+                                <h4><?php echo htmlspecialchars($product['name']); ?></h4>
+                                <p><?php echo htmlspecialchars($product['description']); ?></p>
+                            </div>
+                            <div class="product-price">₹<?php echo number_format($product['price'], 2); ?></div>
+                            <?php if ($product['is_hot_sale']): ?>
+                                <span class="product-badge">Hot Sale</span>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <a href="products.php?action=add" class="action-btn">
+                        <i class="fas fa-plus"></i> Add New Product
+                    </a>
+                    <a href="hot-sale.php" class="action-btn">
+                        <i class="fas fa-fire"></i> Manage Hot Sale
+                    </a>
+                    <a href="../index.html" class="action-btn" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> View Website
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

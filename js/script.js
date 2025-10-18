@@ -2,25 +2,77 @@
 let cart = [];
 let cartTotal = 0;
 
+// Product Search Functionality
+function initProductSearch() {
+    const searchInput = document.getElementById('product-search');
+    const searchBtn = document.getElementById('search-btn');
+
+    if (searchInput && searchBtn) {
+        // Search only on button click
+        searchBtn.addEventListener('click', () => {
+            performSearch();
+        });
+    }
+}
+
+function performSearch() {
+    const searchInput = document.getElementById('product-search');
+    const searchTerm = searchInput.value.trim();
+
+    if (searchTerm.length >= 2) {
+        // Redirect to products page with search parameter
+        window.location.href = `products.php?search=${encodeURIComponent(searchTerm)}`;
+    } else {
+        // If search term is too short, go to all products
+        window.location.href = 'products.php';
+    }
+}
+
 
 // Add to Cart functionality
 document.addEventListener('DOMContentLoaded', () => {
-    // Add to cart buttons
-    document.querySelectorAll('.add-to-cart').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const product = e.target.getAttribute('data-product');
-            const price = parseInt(e.target.getAttribute('data-price'));
-            addToCart(product, price);
-        });
-    });
+    console.log('Cart script loaded successfully');
 
-    // Buy now buttons
-    document.querySelectorAll('.buy-now').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const product = e.target.getAttribute('data-product');
-            const price = parseInt(e.target.getAttribute('data-price'));
-            buyNow(product, price);
-        });
+    // Initialize product search
+    initProductSearch();
+
+    // Use event delegation for better handling of dynamic content
+    document.addEventListener('click', (e) => {
+        console.log('Click detected on:', e.target);
+
+        // Handle Add to Cart buttons
+        if (e.target.classList.contains('add-to-cart') || e.target.closest('.add-to-cart')) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const button = e.target.classList.contains('add-to-cart') ? e.target : e.target.closest('.add-to-cart');
+            const product = button.getAttribute('data-product');
+            const price = parseFloat(button.getAttribute('data-price'));
+
+            console.log('Add to Cart clicked:', { product, price, button }); // Debug log
+
+            if (product && price && !isNaN(price)) {
+                addToCart(product, price, button);
+            } else {
+                console.error('Invalid product data:', { product, price });
+                showNotification('Error: Invalid product data', 'error');
+            }
+        }
+
+        // Buy Now buttons are now handled by WhatsApp Manager system
+        // Removed direct handler to prevent conflicts
+
+        // Handle View Cart buttons
+        if (e.target.classList.contains('view-cart') || e.target.closest('.view-cart')) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const cartModal = document.getElementById('cart-modal');
+            if (cartModal) {
+                cartModal.style.display = 'block';
+                updateCartDisplay();
+            }
+        }
     });
 
     // Cart modal functionality
@@ -59,27 +111,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Buy now buttons - add listeners to buttons without onclick
-    document.querySelectorAll('.buy-now:not([onclick])').forEach(button => {
+    // Add direct event listeners as fallback
+    document.querySelectorAll('.add-to-cart').forEach(button => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             const product = button.getAttribute('data-product');
             const price = parseFloat(button.getAttribute('data-price'));
-            buyNow(product, price);
+            console.log('Direct Add to Cart clicked:', { product, price });
+            if (product && price && !isNaN(price)) {
+                addToCart(product, price, button);
+            }
         });
     });
 
-    // Add to cart buttons - add listeners to buttons without onclick
-    document.querySelectorAll('.add-to-cart:not([onclick])').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const product = button.getAttribute('data-product');
-            const price = parseFloat(button.getAttribute('data-price'));
-            addToCart(product, price);
-        });
-    });
+    // Buy Now buttons are now handled by WhatsApp Manager system
+    // Removed direct WhatsApp handler to prevent conflicts
 
     // Quality modal functionality
     const qualityModal = document.getElementById('quality-modal');
@@ -99,18 +146,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function addToCart(product, price) {
+function addToCart(product, price, button = null) {
     // Prevent multiple rapid clicks
-    const addToCartBtn = event.target;
-    if (addToCartBtn.disabled) {
+    if (button && button.disabled) {
         return;
     }
 
     // Disable button temporarily to prevent multiple clicks
-    addToCartBtn.disabled = true;
-    setTimeout(() => {
-        addToCartBtn.disabled = false;
-    }, 500);
+    if (button) {
+        button.disabled = true;
+        setTimeout(() => {
+            button.disabled = false;
+        }, 500);
+    }
 
     const existingItem = cart.find(item => item.product === product);
 
@@ -128,12 +176,12 @@ function addToCart(product, price) {
     updateCartDisplay();
     showNotification(`${product} added to cart!`, 'success');
 
-    // Change button text to "View Cart"
-    if (addToCartBtn && addToCartBtn.classList.contains('add-to-cart')) {
-        addToCartBtn.textContent = 'View Cart';
-        addToCartBtn.classList.remove('add-to-cart');
-        addToCartBtn.classList.add('view-cart');
-        addToCartBtn.onclick = function() {
+    // Change button text to "View Cart" if button is provided
+    if (button && button.classList.contains('add-to-cart')) {
+        button.textContent = 'View Cart';
+        button.classList.remove('add-to-cart');
+        button.classList.add('view-cart');
+        button.onclick = function() {
             document.getElementById('cart-modal').style.display = 'block';
         };
     }
@@ -169,11 +217,17 @@ function updateCartDisplay() {
     const cartItems = document.getElementById('cart-items');
     const cartTotalElement = document.getElementById('cart-total');
 
+    if (!cartItems || !cartTotalElement) {
+        console.error('Cart elements not found');
+        return;
+    }
+
     if (cart.length === 0) {
         cartItems.innerHTML = `
-            <div class="empty-cart">
-                <i class="fas fa-shopping-cart"></i>
+            <div class="empty-cart" style="text-align: center; padding: 2rem; color: #666;">
+                <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
                 <p>Your cart is empty</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">Add some products to get started!</p>
             </div>
         `;
         cartTotalElement.textContent = '0';
@@ -217,35 +271,12 @@ function checkoutToWhatsApp() {
         return;
     }
 
-    // Direct WhatsApp without customer popup
-    let message = `🛒 *New Order from Gulf Global Co Website*\n\n`;
-    message += `📋 *Order Details:*\n`;
+    // Store cart items in session storage for the order page
+    sessionStorage.setItem('cart', JSON.stringify(cart));
 
-    let total = 0;
-    cart.forEach((item, index) => {
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        message += `${index + 1}. ${item.product}\n`;
-        message += `   Quantity: ${item.quantity}\n`;
-        message += `   Price: ₹${item.price} each\n`;
-        message += `   Subtotal: ₹${itemTotal}\n\n`;
-    });
-
-    message += `💰 *Total Amount: ₹${total}*\n\n`;
-    message += `📞 *Please provide your details:*\n`;
-    message += `• Name: [Your Name]\n`;
-    message += `• Phone: [Your Phone Number]\n`;
-    message += `• Address: [Your Delivery Address]\n\n`;
-    message += `Please confirm the order and provide delivery details. Thank you!`;
-
-    const whatsappNumber = '919789350475';
-    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-    window.open(whatsappURL, '_blank');
-
-    // Clear cart after checkout
-    cart = [];
-    updateCartCount();
+    // Redirect to place order page with cart data
+    const cartData = encodeURIComponent(JSON.stringify(cart));
+    window.location.href = `place-order.php?cart=${cartData}`;
     document.getElementById('cart-modal').style.display = 'none';
 }
 
@@ -608,6 +639,59 @@ notificationStyles.textContent = `
     .loaded .hero-content {
         animation: fadeInUp 0.8s ease-out;
     }
+
+    .cart-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .cart-item-info h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+        color: #333;
+    }
+
+    .cart-item-info p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .cart-item-price {
+        font-weight: bold;
+        color: #2c5aa0;
+        font-size: 1.1rem;
+    }
+
+    .remove-item {
+        background: #ff4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s ease;
+    }
+
+    .remove-item:hover {
+        background: #cc0000;
+    }
+
+    .view-cart {
+        background: #28a745 !important;
+        color: white !important;
+    }
+
+    .view-cart:hover {
+        background: #218838 !important;
+    }
 `;
 
 document.head.appendChild(notificationStyles);
@@ -736,5 +820,69 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Dropdown menu functionality
+    const dropdowns = document.querySelectorAll('.dropdown');
+
+    dropdowns.forEach(dropdown => {
+        const dropdownToggle = dropdown.querySelector('.dropdown-toggle');
+        const dropdownMenu = dropdown.querySelector('.dropdown-menu');
+
+        if (dropdownToggle && dropdownMenu) {
+            // Desktop hover functionality
+            dropdown.addEventListener('mouseenter', () => {
+                if (window.innerWidth > 768) {
+                    dropdownMenu.style.opacity = '1';
+                    dropdownMenu.style.visibility = 'visible';
+                    dropdownMenu.style.transform = 'translateY(0)';
+                }
+            });
+
+            dropdown.addEventListener('mouseleave', () => {
+                if (window.innerWidth > 768) {
+                    dropdownMenu.style.opacity = '0';
+                    dropdownMenu.style.visibility = 'hidden';
+                    dropdownMenu.style.transform = 'translateY(-10px)';
+                }
+            });
+
+            // Mobile click functionality
+            dropdownToggle.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+                }
+            });
+        }
+    });
+
+    // Close dropdowns when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 768) {
+            dropdowns.forEach(dropdown => {
+                const dropdownMenu = dropdown.querySelector('.dropdown-menu');
+                if (dropdownMenu && !dropdown.contains(event.target)) {
+                    dropdownMenu.style.display = 'none';
+                }
+            });
+        }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        dropdowns.forEach(dropdown => {
+            const dropdownMenu = dropdown.querySelector('.dropdown-menu');
+            if (dropdownMenu) {
+                if (window.innerWidth > 768) {
+                    dropdownMenu.style.display = '';
+                    dropdownMenu.style.opacity = '0';
+                    dropdownMenu.style.visibility = 'hidden';
+                    dropdownMenu.style.transform = 'translateY(-10px)';
+                } else {
+                    dropdownMenu.style.display = 'none';
+                }
+            }
+        });
+    });
 });
 

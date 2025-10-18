@@ -1,0 +1,10 @@
+# Admin Panel URL Rewriting
+RewriteEngine On
+
+# Redirect /admin to /admin/index.php
+RewriteCond %{REQUEST_URI} ^/admin/?$
+RewriteRule ^(.*)$ /admin/index.php [L]
+
+# Redirect /admin/ to /admin/index.php
+RewriteCond %{REQUEST_URI} ^/admin/$
+RewriteRule ^(.*)$ /admin/index.php [L]

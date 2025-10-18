@@ -1,3 +1,15 @@
+<?php
+require_once 'config/database.php';
+
+// Get products from database
+$pdo = getConnection();
+$stmt = $pdo->query("SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC LIMIT 6");
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get hot sale products
+$stmt = $pdo->query("SELECT * FROM products WHERE is_hot_sale = 1 AND is_active = 1 ORDER BY created_at DESC LIMIT 3");
+$hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,8 +19,42 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .product-title-link {
+            color: #2c3e50;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .product-title-link:hover {
+            color: #25d366;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
+    <!-- Top Header Bar -->
+    <div class="top-header">
+        <div class="container">
+            <div class="top-header-content">
+                <div class="free-shipping">
+                    <i class="fas fa-truck"></i>
+                    <span>Free shipping on order above ₹500</span>
+                </div>
+                <div class="top-right">
+                    <div class="contact-phone">
+                        <i class="fas fa-phone"></i>
+                        <span>+91 97893 50475</span>
+                    </div>
+                    <div class="social-links">
+                        <a href="#" target="_blank" title="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://wa.me/919789350475" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
@@ -22,39 +68,91 @@
             </div>
             <ul class="nav-menu" id="nav-menu">
                 <li class="nav-item">
-                    <a href="index.html#home" class="nav-link">Home</a>
+                    <a href="index.php#home" class="nav-link">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a href="index.html#about" class="nav-link">About</a>
+                    <a href="index.php#about" class="nav-link">About</a>
+                </li>
+                <?php
+                // Generate dynamic navigation from database
+                require_once 'includes/navigation.php';
+                $pdo = getConnection();
+
+                // Get categories with subcategories
+                $stmt = $pdo->query("
+                    SELECT c.*,
+                           COUNT(DISTINCT s.id) as subcategory_count
+                    FROM categories c
+                    LEFT JOIN subcategories s ON c.id = s.category_id AND s.is_active = 1
+                    WHERE c.is_active = 1
+                    GROUP BY c.id
+                    ORDER BY c.sort_order, c.name
+                ");
+                $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Get subcategories for each category
+                foreach ($categories as &$category) {
+                    $stmt = $pdo->prepare("
+                        SELECT s.*
+                        FROM subcategories s
+                        WHERE s.category_id = ? AND s.is_active = 1
+                        ORDER BY s.sort_order, s.name
+                    ");
+                    $stmt->execute([$category['id']]);
+                    $category['subcategories'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                }
+
+                // Generate Products dropdown
+                if (!empty($categories)): ?>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">Products <i class="fas fa-chevron-down"></i></a>
+                    <ul class="dropdown-menu">
+                        <?php foreach ($categories as $category): ?>
+                            <?php if (!empty($category['subcategories'])): ?>
+                                <li class="dropdown-submenu">
+                                    <a href="products.php?category=<?php echo $category['id']; ?>" class="dropdown-link"><?php echo htmlspecialchars($category['name']); ?> <i class="fas fa-chevron-right"></i></a>
+                                    <ul class="submenu">
+                                        <?php foreach ($category['subcategories'] as $subcategory): ?>
+                                            <li><a href="products.php?category=<?php echo $category['id']; ?>&subcategory=<?php echo $subcategory['id']; ?>" class="submenu-link"><?php echo htmlspecialchars($subcategory['name']); ?></a></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </li>
+                            <?php else: ?>
+                                <li><a href="products.php?category=<?php echo $category['id']; ?>" class="dropdown-link"><?php echo htmlspecialchars($category['name']); ?></a></li>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <li><a href="products.php" class="dropdown-link">View All Products</a></li>
+                    </ul>
+                </li>
+                <?php endif; ?>
+                <li class="nav-item">
+                    <a href="index.php#quality" class="nav-link">Quality</a>
                 </li>
                 <li class="nav-item">
-                    <a href="products.html" class="nav-link">Products</a>
-                </li>
-                <li class="nav-item">
-                    <a href="index.html#quality" class="nav-link">Quality</a>
-                </li>
-                <li class="nav-item">
-                    <a href="index.html#contact" class="nav-link">Contact</a>
+                    <a href="index.php#contact" class="nav-link">Contact</a>
                 </li>
             </ul>
-            <a href="#" class="nav-link cart-link" id="cart-link">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="cart-count" id="cart-count">0</span>
-            </a>
+            <div class="nav-actions">
+                <a href="index.php#hot-sale" class="nav-link hot-sale-link" title="Hot Sale">
+                    <i class="fas fa-fire"></i>
+                    <span>Hot Sale</span>
+                </a>
+                <div class="search-container">
+                    <input type="text" id="product-search" placeholder="Search products..." class="search-input">
+                    <button class="search-btn" id="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <a href="#" class="nav-link cart-link" id="cart-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </a>
+            </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
     <section id="home" class="hero">
-        <!-- Floating E-commerce Elements -->
-        <div class="floating-elements">
-            <div class="floating-icon" style="top: 15%; left: 10%; animation-delay: 0s;">🛒</div>
-            <div class="floating-icon" style="top: 25%; right: 15%; animation-delay: 2s;">🚚</div>
-            <div class="floating-icon" style="top: 60%; left: 5%; animation-delay: 4s;">💰</div>
-            <div class="floating-icon" style="top: 70%; right: 20%; animation-delay: 6s;">📦</div>
-            <div class="floating-icon" style="top: 40%; left: 20%; animation-delay: 8s;">🏪</div>
-            <div class="floating-icon" style="top: 80%; right: 5%; animation-delay: 10s;">🌐</div>
-        </div>
 
         <div class="hero-content">
             <h1 class="hero-title">EMPOWERING TRADE. DELIVERING EXCELLENCE.</h1>
@@ -125,6 +223,37 @@
         </div>
     </section>
 
+    <!-- Hot Sale Section -->
+    <section id="hot-sale" class="products">
+        <div class="container">
+            <div class="section-header">
+                <h2><i class="fas fa-fire"></i> Hot Sale Products</h2>
+                <p>Limited time offers on our best products</p>
+            </div>
+            <div class="products-grid">
+                <?php foreach ($hot_sale_products as $product): ?>
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img <?php echo strtolower(str_replace(' ', '-', $product['category'])); ?>"></div>
+                            </div>
+                        </div>
+                        <div class="product-badge hot-sale">Hot Sale</div>
+                        <h3><a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-title-link"><?php echo htmlspecialchars($product['name']); ?></a></h3>
+                        <p class="product-description"><?php echo htmlspecialchars($product['description']); ?></p>
+                        <div class="product-price">₹<?php echo number_format($product['price'], 2); ?></div>
+                        <div class="product-actions">
+                            <button class="btn btn-secondary add-to-cart" data-product="<?php echo htmlspecialchars($product['name']); ?>" data-price="<?php echo $product['price']; ?>">Add to Cart</button>
+                            <button onclick="window.location.href='place-order.php?id=<?php echo $product['id']; ?>'" class="btn btn-whatsapp">
+                                <i class="fab fa-whatsapp"></i> Buy Now
+                            </button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+
     <!-- Products Section -->
     <section id="products" class="products">
         <div class="container">
@@ -133,114 +262,29 @@
                 <p>Discover our comprehensive range of premium products</p>
             </div>
             <div class="products-grid">
-                <div class="product-card">
-                    <div class="product-image-container">
-                        <div class="product-image">
-                            <div class="product-img oil-bottle"></div>
+                <?php foreach ($products as $product): ?>
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image">
+                                <div class="product-img <?php echo strtolower(str_replace(' ', '-', $product['category'])); ?>"></div>
+                            </div>
+                        </div>
+                        <?php if ($product['is_hot_sale']): ?>
+                            <div class="product-badge hot-sale">Hot Sale</div>
+                        <?php else: ?>
+                            <div class="product-badge <?php echo $product['category']; ?>"><?php echo ucfirst($product['category']); ?></div>
+                        <?php endif; ?>
+                        <h3><a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-title-link"><?php echo htmlspecialchars($product['name']); ?></a></h3>
+                        <p class="product-description"><?php echo htmlspecialchars($product['description']); ?></p>
+                        <div class="product-price">₹<?php echo number_format($product['price'], 2); ?></div>
+                        <div class="product-actions">
+                            <button class="btn btn-secondary add-to-cart" data-product="<?php echo htmlspecialchars($product['name']); ?>" data-price="<?php echo $product['price']; ?>">Add to Cart</button>
+                            <button onclick="window.location.href='place-order.php?id=<?php echo $product['id']; ?>'" class="btn btn-whatsapp">
+                                <i class="fab fa-whatsapp"></i> Buy Now
+                            </button>
                         </div>
                     </div>
-                    <div class="product-badge fresh">Fresh</div>
-                    <h3>Sunrise Sunflower Oil</h3>
-                    <p class="product-description">Refined, light oil for daily cooking - 1L bottle</p>
-                    <div class="product-price">₹120</div>
-                    <div class="product-actions">
-                        <button class="btn btn-primary add-to-cart" data-product="Sunrise Sunflower Oil" data-price="120">Add to Cart</button>
-                        <button class="btn btn-secondary buy-now" data-product="Sunrise Sunflower Oil" data-price="120">Buy Now</button>
-                        <button class="btn btn-quality quality-info" title="Quality Information">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-image-container">
-                        <div class="product-image">
-                            <div class="product-img almonds"></div>
-                        </div>
-                    </div>
-                    <div class="product-badge premium">Premium</div>
-                    <h3>Royal Almonds (California)</h3>
-                    <p class="product-description">Crunchy, rich in protein - Grade A quality - 500g pack</p>
-                    <div class="product-price">₹450</div>
-                    <div class="product-actions">
-                        <button class="btn btn-primary add-to-cart" data-product="Royal Almonds (California)" data-price="450">Add to Cart</button>
-                        <button class="btn btn-secondary buy-now" data-product="Royal Almonds (California)" data-price="450">Buy Now</button>
-                        <button class="btn btn-quality quality-info" title="Quality Information">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-image-container">
-                        <div class="product-image">
-                            <div class="product-img chicken"></div>
-                        </div>
-                    </div>
-                    <div class="product-badge fresh">Fresh</div>
-                    <h3>Fresh Chicken (Whole)</h3>
-                    <p class="product-description">Daily sourced, hygienically packed - 1kg</p>
-                    <div class="product-price">₹180</div>
-                    <div class="product-actions">
-                        <button class="btn btn-primary add-to-cart" data-product="Fresh Chicken (Whole)" data-price="180">Add to Cart</button>
-                        <button class="btn btn-secondary buy-now" data-product="Fresh Chicken (Whole)" data-price="180">Buy Now</button>
-                        <button class="btn btn-quality quality-info" title="Quality Information">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-image-container">
-                        <div class="product-image">
-                            <div class="product-img steel"></div>
-                        </div>
-                    </div>
-                    <div class="product-badge quality">Quality</div>
-                    <h3>Premium Steel Rods (TMT)</h3>
-                    <p class="product-description">High-grade steel rods for construction - 12mm diameter</p>
-                    <div class="product-price">₹65/kg</div>
-                    <div class="product-actions">
-                        <button class="btn btn-primary add-to-cart" data-product="Premium Steel Rods (TMT)" data-price="65" onclick="addToCart('Premium Steel Rods (TMT)', 65)">Add to Cart</button>
-                        <button class="btn btn-secondary buy-now" data-product="Premium Steel Rods (TMT)" data-price="65" onclick="buyNow('Premium Steel Rods (TMT)', 65)">Buy Now</button>
-                        <button class="btn btn-quality quality-info" title="Quality Information" onclick="openQualityModal()">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-image-container">
-                        <div class="product-image">
-                            <div class="product-img rice"></div>
-                        </div>
-                    </div>
-                    <div class="product-badge organic">Organic</div>
-                    <h3>Basmati Gold 1121 Rice</h3>
-                    <p class="product-description">Aged, aromatic rice - 5kg pack</p>
-                    <div class="product-price">₹280</div>
-                    <div class="product-actions">
-                        <button class="btn btn-primary add-to-cart" data-product="Basmati Gold 1121 Rice" data-price="280">Add to Cart</button>
-                        <button class="btn btn-secondary buy-now" data-product="Basmati Gold 1121 Rice" data-price="280">Buy Now</button>
-                        <button class="btn btn-quality quality-info" title="Quality Information">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-image-container">
-                        <div class="product-image">
-                            <div class="product-img fish"></div>
-                        </div>
-                    </div>
-                    <div class="product-badge fresh">Fresh</div>
-                    <h3>Fresh Fish (Pomfret)</h3>
-                    <p class="product-description">Daily coastal catch - 1kg</p>
-                    <div class="product-price">₹320</div>
-                    <div class="product-actions">
-                        <button class="btn btn-primary add-to-cart" data-product="Fresh Fish (Pomfret)" data-price="320">Add to Cart</button>
-                        <button class="btn btn-secondary buy-now" data-product="Fresh Fish (Pomfret)" data-price="320">Buy Now</button>
-                        <button class="btn btn-quality quality-info" title="Quality Information">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </section>
@@ -296,7 +340,7 @@
                         <div>
                             <h4>Phone & WhatsApp</h4>
                             <p>+91 97893 50475<br>+91 91234 56789</p>
-                            <a href="https://wa.me/919789350475" class="whatsapp-btn" target="_blank" onclick="console.log('Direct WhatsApp clicked')">
+                            <a href="#" class="whatsapp-btn" data-message="Hello, I am interested in your products and services.">
                                 <i class="fab fa-whatsapp"></i> Chat on WhatsApp
                             </a>
                         </div>
@@ -323,7 +367,7 @@
                         <textarea placeholder="Your Message" rows="5" required></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">Send Message</button>
-                    <button type="button" class="btn btn-whatsapp" onclick="console.log('WhatsApp button clicked'); sendWhatsAppMessage();">
+                    <button type="button" class="btn btn-whatsapp" data-message="Hello, I would like to get in touch regarding your products and services.">
                         <i class="fab fa-whatsapp"></i> Send via WhatsApp
                     </button>
                 </form>
@@ -348,10 +392,10 @@
                 <div class="footer-section">
                     <h4>Our Products</h4>
                     <ul>
-                        <li><a href="products.html#groceries">Groceries</a></li>
-                        <li><a href="products.html#meats">Fresh & Frozen Meats</a></li>
-                        <li><a href="products.html#building">Building Materials</a></li>
-                        <li><a href="products.html">All Products</a></li>
+                        <li><a href="products.php#groceries">Groceries</a></li>
+                        <li><a href="products.php#meats">Fresh & Frozen Meats</a></li>
+                        <li><a href="products.php#building">Building Materials</a></li>
+                        <li><a href="products.php">All Products</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -391,7 +435,7 @@
                     <strong>Total: ₹<span id="cart-total">0</span></strong>
                 </div>
                 <button class="btn btn-primary checkout-whatsapp" id="checkout-whatsapp">
-                    <i class="fab fa-whatsapp"></i> Checkout via WhatsApp
+                    <i class="fas fa-shopping-cart"></i> Place Order
                 </button>
             </div>
         </div>
@@ -487,9 +531,9 @@
                 </div>
             </div>
         </div>
-
     </div>
 
-    <script src="js/script.js?v=2.0"></script>
+    <script src="js/script.js?v=2.1"></script>
+    <script src="js/whatsapp.js?v=1.7"></script>
 </body>
 </html>

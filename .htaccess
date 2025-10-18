@@ -1,0 +1,11 @@
+# Gulf Global Co - URL Rewriting
+RewriteEngine On
+
+# Admin Panel URL
+RewriteRule ^admin/?$ admin/index.php [L]
+
+# Clean URLs for products
+RewriteRule ^products/?$ products.php [L]
+
+# API endpoints
+RewriteRule ^api/(.*)$ api/$1 [L]
