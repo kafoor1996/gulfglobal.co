@@ -58,7 +58,7 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($product['name']); ?> - Gulf Global Co</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3.1">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -513,11 +513,29 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <span class="bar"></span>
             </div>
             <ul class="nav-menu" id="nav-menu">
+                <!-- Mobile Search -->
+                <li class="mobile-search">
+                    <div class="mobile-search-container">
+                        <input type="text" class="mobile-search-input" placeholder="Search products..." id="mobile-search-input">
+                        <button class="mobile-search-btn" id="mobile-search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#hot-sale" class="nav-link">Hot Sale</a>
+                </li>
                 <li class="nav-item">
                     <a href="index.php" class="nav-link">Home</a>
                 </li>
                 <li class="nav-item">
                     <a href="index.php#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#quality" class="nav-link">Quality</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#contact" class="nav-link">Contact</a>
                 </li>
                 <?php
                 // Generate dynamic navigation from database
@@ -571,12 +589,6 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </ul>
                 </li>
                 <?php endif; ?>
-                <li class="nav-item">
-                    <a href="index.php#quality" class="nav-link">Quality</a>
-                </li>
-                <li class="nav-item">
-                    <a href="index.php#contact" class="nav-link">Contact</a>
-                </li>
             </ul>
             <div class="nav-actions">
                 <a href="index.php#hot-sale" class="nav-link hot-sale-link" title="Hot Sale">
@@ -813,7 +825,28 @@ $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </footer>
 
-    <script src="js/script.js?v=2.1"></script>
+    <!-- Shopping Cart Modal -->
+    <div id="cart-modal" class="cart-modal">
+        <div class="cart-modal-content">
+            <div class="cart-header">
+                <h3>Shopping Cart</h3>
+                <span class="close-cart">&times;</span>
+            </div>
+            <div class="cart-items" id="cart-items">
+                <!-- Cart items will be added here dynamically -->
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <strong>Total: ₹<span id="cart-total">0</span></strong>
+                </div>
+                <button class="btn btn-primary checkout-whatsapp" id="checkout-whatsapp">
+                    <i class="fas fa-shopping-cart"></i> Place Order
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js?v=2.4"></script>
     <script src="js/whatsapp.js?v=1.7"></script>
     <script>
         function changeMainImage(imagePath, thumbElement) {

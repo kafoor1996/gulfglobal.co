@@ -31,6 +31,7 @@ function performSearch() {
 
 // Add to Cart functionality
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing cart functionality');
 
     // Initialize product search
     initProductSearch();
@@ -78,26 +79,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeCart = document.querySelector('.close-cart');
     const checkoutBtn = document.getElementById('checkout-whatsapp');
 
-    cartLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        cartModal.style.display = 'block';
-        updateCartDisplay();
-    });
+    if (cartLink && cartModal) {
+        cartLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Cart link clicked, cart items:', cart);
+            cartModal.style.display = 'block';
+            updateCartDisplay();
+        });
+    } else {
+        console.log('Cart link or modal not found:', { cartLink, cartModal });
+    }
 
-    closeCart.addEventListener('click', () => {
-        cartModal.style.display = 'none';
-    });
+    if (closeCart && cartModal) {
+        closeCart.addEventListener('click', () => {
+            cartModal.style.display = 'none';
+        });
+    }
 
-    checkoutBtn.addEventListener('click', () => {
-        checkoutToWhatsApp();
-    });
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', () => {
+            checkoutToWhatsApp();
+        });
+    }
 
     // Close modal when clicking outside
-    window.addEventListener('click', (e) => {
-        if (e.target === cartModal) {
-            cartModal.style.display = 'none';
-        }
-    });
+    if (cartModal) {
+        window.addEventListener('click', (e) => {
+            if (e.target === cartModal) {
+                cartModal.style.display = 'none';
+            }
+        });
+    }
 
     // Quality info buttons
     document.querySelectorAll('.quality-info:not([onclick])').forEach(button => {
@@ -178,7 +190,10 @@ function addToCart(product, price, button = null) {
         button.classList.remove('add-to-cart');
         button.classList.add('view-cart');
         button.onclick = function() {
-            document.getElementById('cart-modal').style.display = 'block';
+            const cartModal = document.getElementById('cart-modal');
+            if (cartModal) {
+                cartModal.style.display = 'block';
+            }
         };
     }
 }
@@ -206,7 +221,10 @@ function buyNow(product, price) {
 
 function updateCartCount() {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    document.getElementById('cart-count').textContent = totalItems;
+    const cartCount = document.getElementById('cart-count');
+    if (cartCount) {
+        cartCount.textContent = totalItems;
+    }
 }
 
 function updateCartDisplay() {
@@ -273,7 +291,10 @@ function checkoutToWhatsApp() {
     // Redirect to place order page with cart data
     const cartData = encodeURIComponent(JSON.stringify(cart));
     window.location.href = `place-order.php?cart=${cartData}`;
-    document.getElementById('cart-modal').style.display = 'none';
+    const cartModal = document.getElementById('cart-modal');
+    if (cartModal) {
+        cartModal.style.display = 'none';
+    }
 }
 
 // Smooth scrolling for navigation links
@@ -918,5 +939,32 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Mobile Filter Menu Toggle
+    const filterMenuToggle = document.getElementById('filter-menu-toggle');
+    const filterDropdown = document.getElementById('filter-dropdown');
+
+    if (filterMenuToggle && filterDropdown) {
+        filterMenuToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            filterDropdown.classList.toggle('active');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.mobile-filter-menu')) {
+                filterDropdown.classList.remove('active');
+            }
+        });
+
+        // Close dropdown when clicking on a filter option
+        const filterDropdownBtns = document.querySelectorAll('.filter-dropdown-btn');
+        filterDropdownBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterDropdown.classList.remove('active');
+            });
+        });
+    }
+
 });
 

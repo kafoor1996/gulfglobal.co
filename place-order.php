@@ -27,7 +27,7 @@ if (isset($_GET['cart'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Place Order - Gulf Global Co</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3.1">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -200,11 +200,29 @@ if (isset($_GET['cart'])) {
                 <span class="bar"></span>
             </div>
             <ul class="nav-menu" id="nav-menu">
+                <!-- Mobile Search -->
+                <li class="mobile-search">
+                    <div class="mobile-search-container">
+                        <input type="text" class="mobile-search-input" placeholder="Search products..." id="mobile-search-input">
+                        <button class="mobile-search-btn" id="mobile-search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </li>
                 <li class="nav-item">
-                    <a href="index.php#home" class="nav-link">Home</a>
+                    <a href="index.php#hot-sale" class="nav-link">Hot Sale</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php" class="nav-link">Home</a>
                 </li>
                 <li class="nav-item">
                     <a href="index.php#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#quality" class="nav-link">Quality</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#contact" class="nav-link">Contact</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle">Products <i class="fas fa-chevron-down"></i></a>
@@ -214,12 +232,6 @@ if (isset($_GET['cart'])) {
                         <li><a href="products.php#building" class="dropdown-link">Building Materials</a></li>
                         <li><a href="products.php" class="dropdown-link">View All Products</a></li>
                     </ul>
-                </li>
-                <li class="nav-item">
-                    <a href="index.php#quality" class="nav-link">Quality</a>
-                </li>
-                <li class="nav-item">
-                    <a href="index.php#contact" class="nav-link">Contact</a>
                 </li>
             </ul>
             <div class="nav-actions">
@@ -395,7 +407,7 @@ if (isset($_GET['cart'])) {
         }
     </style>
 
-    <script src="js/script.js?v=2.1"></script>
+    <script src="js/script.js?v=2.4"></script>
     <script src="js/whatsapp.js?v=1.7"></script>
     <script>
         document.getElementById('order-form').addEventListener('submit', async function(e) {

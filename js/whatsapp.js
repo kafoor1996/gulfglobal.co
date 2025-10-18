@@ -47,166 +47,19 @@ class WhatsAppManager {
     // Prompt user for name and phone
     async promptUserData() {
         return new Promise((resolve) => {
-            const modal = this.createUserDataModal();
-            document.body.appendChild(modal);
+            // Use simple prompt instead of modal
+            const name = prompt('Enter your name:') || '';
+            const phone = prompt('Enter your WhatsApp number:') || '';
 
-            const form = modal.querySelector('#userDataForm');
-            const nameInput = modal.querySelector('#userName');
-            const phoneInput = modal.querySelector('#userPhone');
-
-            // Load existing data if available
-            nameInput.value = this.userData.name;
-            phoneInput.value = this.userData.phone;
-
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = nameInput.value.trim();
-                const phone = phoneInput.value.trim();
-
-                if (name && phone) {
-                    this.saveUserData(name, phone);
-                    document.body.removeChild(modal);
-                    resolve({ name, phone });
-                } else {
-                    alert('Please enter both name and phone number');
-                }
-            });
-
-            // Close modal on cancel
-            modal.querySelector('.close-modal').addEventListener('click', () => {
-                document.body.removeChild(modal);
+            if (name && phone) {
+                this.saveUserData(name, phone);
+                resolve({ name, phone });
+            } else {
                 resolve(null);
-            });
+            }
         });
     }
 
-    // Create user data modal
-    createUserDataModal() {
-        const modal = document.createElement('div');
-        modal.className = 'whatsapp-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3><i class="fab fa-whatsapp"></i> WhatsApp Contact Info</h3>
-                    <button class="close-modal">&times;</button>
-                </div>
-                <form id="userDataForm">
-                    <div class="form-group">
-                        <label for="userName">Your Name</label>
-                        <input type="text" id="userName" name="name" required
-                               placeholder="Enter your name">
-                    </div>
-                    <div class="form-group">
-                        <label for="userPhone">WhatsApp Number</label>
-                        <input type="tel" id="userPhone" name="phone" required
-                               placeholder="Enter your WhatsApp number">
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" class="btn-cancel close-modal">Cancel</button>
-                        <button type="submit" class="btn-submit">Save & Continue</button>
-                    </div>
-                </form>
-            </div>
-        `;
-
-        // Add modal styles
-        const style = document.createElement('style');
-        style.textContent = `
-            .whatsapp-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-            }
-            .modal-content {
-                background: white;
-                border-radius: 15px;
-                padding: 0;
-                max-width: 400px;
-                width: 90%;
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            }
-            .modal-header {
-                background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
-                color: white;
-                padding: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-radius: 15px 15px 0 0;
-            }
-            .modal-header h3 {
-                margin: 0;
-                font-size: 1.2rem;
-            }
-            .close-modal {
-                background: none;
-                border: none;
-                color: white;
-                font-size: 1.5rem;
-                cursor: pointer;
-                padding: 0;
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .modal-content form {
-                padding: 20px;
-            }
-            .form-group {
-                margin-bottom: 15px;
-            }
-            .form-group label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: 600;
-                color: #333;
-            }
-            .form-group input {
-                width: 100%;
-                padding: 10px;
-                border: 2px solid #e0e0e0;
-                border-radius: 8px;
-                font-size: 16px;
-            }
-            .form-group input:focus {
-                outline: none;
-                border-color: #25d366;
-            }
-            .modal-actions {
-                display: flex;
-                gap: 10px;
-                justify-content: flex-end;
-                margin-top: 20px;
-            }
-            .btn-cancel, .btn-submit {
-                padding: 10px 20px;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 600;
-            }
-            .btn-cancel {
-                background: #f0f0f0;
-                color: #333;
-            }
-            .btn-submit {
-                background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
-                color: white;
-            }
-        `;
-        document.head.appendChild(style);
-
-        return modal;
-    }
 
     // Send WhatsApp message
     async sendMessage(message, phone = null) {
@@ -265,7 +118,11 @@ class WhatsAppManager {
             const result = await response.json();
 
             if (result.success) {
-                // Message sent successfully - no alert needed
+                if (result.method === 'direct' && result.url) {
+                    // Open WhatsApp directly for direct method
+                    window.open(result.url, '_blank');
+                }
+                // For API method, message is sent automatically
             } else {
                 alert('Failed to send message: ' + result.error);
             }

@@ -16,7 +16,7 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gulf Global Co - Your Trusted Partner for Global Imports & Trade</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3.1">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -340,49 +340,42 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <p>We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
             </div>
             <div class="contact-content">
-                <div class="contact-info">
-                    <div class="contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                            <h4>Address</h4>
-                            <p>Plot No. 142, Global Trade Complex<br>Industrial Avenue, Guindy<br>Chennai - 600032, India</p>
+                <div class="row">
+                    <div class="col-3">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <h4>Address</h4>
+                                <p>Plot No. 142, Global Trade Complex<br>Industrial Avenue, Guindy<br>Chennai - 600032, India</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="contact-item">
-                        <i class="fas fa-phone"></i>
-                        <div>
-                            <h4>Phone & WhatsApp</h4>
-                            <p>+91 97893 50475<br>+91 91234 56789</p>
+                    <div class="col-3">
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <div>
+                                <h4>Phone & WhatsApp</h4>
+                                <p>+91 97893 50475<br>+91 91234 56789</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <h4>Email</h4>
+                                <p>info@gulfglobal.co<br>sales@gulfglobal.co</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="contact-item">
                             <a href="#" class="whatsapp-btn" data-message="Hello, I am interested in your products and services.">
                                 <i class="fab fa-whatsapp"></i> Chat on WhatsApp
                             </a>
                         </div>
                     </div>
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                            <h4>Email</h4>
-                            <p>info@gulfglobal.co<br>sales@gulfglobal.co</p>
-                        </div>
-                    </div>
                 </div>
-                <form class="contact-form">
-                    <div class="form-group">
-                        <input type="text" placeholder="Your Name" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="email" placeholder="Your Email" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" placeholder="Subject" required>
-                    </div>
-                    <div class="form-group">
-                        <textarea placeholder="Your Message" rows="5" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-whatsapp" data-message="Hello, I would like to get in touch regarding your products and services.">
-                        <i class="fab fa-whatsapp"></i> Send via WhatsApp
-                    </button>
-                </form>
             </div>
         </div>
     </section>
@@ -545,7 +538,7 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <script src="js/script.js?v=2.1"></script>
-    <script src="js/whatsapp.js?v=1.7"></script>
+    <script src="js/script.js?v=2.4"></script>
+    <script src="js/whatsapp.js?v=1.8"></script>
 </body>
 </html>

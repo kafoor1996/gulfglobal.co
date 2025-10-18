@@ -21,9 +21,43 @@ try {
     $stmt->execute();
     $settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$settings || $settings['method'] !== 'api') {
+    if (!$settings) {
+        // If no settings found, use default direct method
+        $settings = ['method' => 'direct'];
+    }
+
+    // Handle direct method
+    if ($settings['method'] === 'direct') {
+        // For direct method, return the WhatsApp URL for client-side handling
+        $adminPhone = $settings['admin_phone'] ?? '';
+        if (!$adminPhone) {
+            // Get admin's WhatsApp number from site settings
+            $stmt = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = 'whatsapp_number'");
+            $stmt->execute();
+            $adminPhone = $stmt->fetchColumn();
+        }
+
+        if (!$adminPhone) {
+            echo json_encode(['success' => false, 'error' => 'Admin WhatsApp number not configured']);
+            exit;
+        }
+
+        // Clean phone number (remove + and spaces)
+        $cleanPhone = preg_replace('/[^0-9]/', '', $adminPhone);
+        $whatsappUrl = "https://wa.me/{$cleanPhone}?text=" . urlencode($message);
+
+        echo json_encode([
+            'success' => true,
+            'method' => 'direct',
+            'url' => $whatsappUrl
+        ]);
+        exit;
+    }
+
+    // Handle API method
+    if ($settings['method'] !== 'api') {
         http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'API method not configured']);
+        echo json_encode(['success' => false, 'error' => 'Invalid WhatsApp method configured']);
         exit;
     }
 

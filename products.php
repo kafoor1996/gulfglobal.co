@@ -64,7 +64,7 @@ foreach ($products as $product) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products - Gulf Global Co</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3.1">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -218,11 +218,29 @@ foreach ($products as $product) {
                 <span class="bar"></span>
             </div>
             <ul class="nav-menu" id="nav-menu">
+                <!-- Mobile Search -->
+                <li class="mobile-search">
+                    <div class="mobile-search-container">
+                        <input type="text" class="mobile-search-input" placeholder="Search products..." id="mobile-search-input">
+                        <button class="mobile-search-btn" id="mobile-search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#hot-sale" class="nav-link">Hot Sale</a>
+                </li>
                 <li class="nav-item">
                     <a href="index.php" class="nav-link">Home</a>
                 </li>
                 <li class="nav-item">
                     <a href="index.php#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#quality" class="nav-link">Quality</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php#contact" class="nav-link">Contact</a>
                 </li>
                 <?php
                 // Generate dynamic navigation from database
@@ -276,24 +294,12 @@ foreach ($products as $product) {
                     </ul>
                 </li>
                 <?php endif; ?>
-                <li class="nav-item">
-                    <a href="index.php#quality" class="nav-link">Quality</a>
-                </li>
-                <li class="nav-item">
-                    <a href="index.php#contact" class="nav-link">Contact</a>
-                </li>
             </ul>
             <div class="nav-actions">
                 <a href="index.php#hot-sale" class="nav-link hot-sale-link" title="Hot Sale">
                     <i class="fas fa-fire"></i>
                     <span>Hot Sale</span>
                 </a>
-                <div class="search-container">
-                    <input type="text" id="product-search" placeholder="Search products..." class="search-input">
-                    <button class="search-btn" id="search-btn">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
                 <a href="#" class="nav-link cart-link" id="cart-link">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count" id="cart-count">0</span>
@@ -353,7 +359,28 @@ foreach ($products as $product) {
         <div class="container">
             <!-- Category Filter -->
             <div class="category-filter">
-                <h3 style="margin-bottom: 15px; color: #2c5aa0;">Filter by Category</h3>
+                <div class="filter-header">
+                    <h3 style="margin-bottom: 15px; color: #2c5aa0;">Filter by Category</h3>
+                    <!-- Mobile/Tablet Three-Dot Menu -->
+                    <div class="mobile-filter-menu">
+                        <button class="filter-menu-toggle" id="filter-menu-toggle">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="filter-dropdown" id="filter-dropdown">
+                            <div class="filter-dropdown-content">
+                                <a href="products.php" class="filter-dropdown-btn <?php echo empty($category_filter) ? 'active' : ''; ?>">
+                                    <i class="fas fa-th"></i> All Products
+                                </a>
+                                <?php foreach ($categories as $cat): ?>
+                                    <a href="products.php?category=<?php echo $cat['id']; ?>"
+                                       class="filter-dropdown-btn <?php echo $category_filter == $cat['id'] ? 'active' : ''; ?>">
+                                        <i class="fas fa-tag"></i> <?php echo htmlspecialchars($cat['name']); ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="filter-buttons">
                     <a href="products.php" class="filter-btn <?php echo empty($category_filter) ? 'active' : ''; ?>">
                         All Products
@@ -639,7 +666,7 @@ foreach ($products as $product) {
         </div>
     </div>
 
-    <script src="js/script.js?v=2.1"></script>
+    <script src="js/script.js?v=2.4"></script>
     <script src="js/whatsapp.js?v=1.7"></script>
 </body>
 </html>
