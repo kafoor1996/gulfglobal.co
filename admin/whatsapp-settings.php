@@ -232,6 +232,44 @@ if (isset($_SESSION['success_message'])) {
             color: #333;
         }
 
+        .mobile-menu-btn {
+            display: block !important;
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            background: #1e3d6f;
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
         .form-group input,
         .form-group textarea {
             width: 100%;
@@ -346,6 +384,9 @@ if (isset($_SESSION['success_message'])) {
         <!-- Main Content -->
         <div class="main-content">
             <div class="top-bar">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <h1>WhatsApp Settings</h1>
                 <div class="admin-info">
                     <div class="admin-avatar">
@@ -430,6 +471,55 @@ if (isset($_SESSION['success_message'])) {
             directRadio.addEventListener('change', toggleApiFields);
             apiRadio.addEventListener('change', toggleApiFields);
         });
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const menuIcon = menuBtn.querySelector('i');
+
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+
+            // Toggle icon between hamburger and X
+            if (sidebar.classList.contains('show')) {
+                menuIcon.className = 'fas fa-times';
+            } else {
+                menuIcon.className = 'fas fa-bars';
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const menuIcon = menuBtn.querySelector('i');
+
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+
+            // Reset icon to hamburger
+            menuIcon.className = 'fas fa-bars';
+        }
+
+        // Close sidebar when clicking on menu items
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+
+        // Close sidebar on window resize if desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
     </script>
+
+    <!-- Mobile Overlay -->
+    <div class="overlay" onclick="closeSidebar()"></div>
 </body>
 </html>

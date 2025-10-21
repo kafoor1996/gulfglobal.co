@@ -131,6 +131,10 @@ if (isset($_SESSION['success_message'])) {
 
         .sidebar-menu {
             padding: 20px 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
 
         .menu-item {
@@ -310,15 +314,157 @@ if (isset($_SESSION['success_message'])) {
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
+                width: 280px;
+                z-index: 1000;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
             }
 
             .main-content {
                 margin-left: 0;
+                padding: 0;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .content {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .top-bar {
+                padding: 15px 20px;
+                position: relative;
+            }
+
+            .top-bar h1 {
+                font-size: 1.4rem;
+            }
+
+            .admin-info {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 8px;
             }
 
             .method-options {
                 flex-direction: column;
+                gap: 15px;
+                padding: 20px;
             }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .form-group label {
+                font-size: 0.9rem;
+                margin-bottom: 8px;
+            }
+
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                width: 100%;
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 1rem;
+            }
+
+            /* Mobile Table Responsive */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+
+            .table-responsive table {
+                min-width: 600px;
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .table-responsive th,
+            .table-responsive td {
+                padding: 8px 12px;
+                text-align: left;
+                border-bottom: 1px solid #e0e0e0;
+                white-space: nowrap;
+            }
+
+            .table-responsive th {
+                background: #f8f9fa;
+                font-weight: 600;
+                color: #333;
+                font-size: 0.85rem;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            .table-responsive td {
+                font-size: 0.8rem;
+                color: #666;
+            }
+
+            .table-responsive tr:hover {
+                background: #f8f9fa;
+            }
+
+            .mobile-menu-btn {
+                display: block !important;
+                background: #2c5aa0;
+                color: white;
+                border: none;
+                padding: 12px 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1.1rem;
+                position: absolute;
+                left: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 1001;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
+            }
+
+            .mobile-menu-btn:hover {
+                background: #1e3d6f;
+                transform: translateY(-50%) scale(1.05);
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .overlay.show {
+                display: block;
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+        }
+
+        .overlay {
+            display: none;
         }
     </style>
 </head>
@@ -347,6 +493,9 @@ if (isset($_SESSION['success_message'])) {
         <!-- Main Content -->
         <div class="main-content">
             <div class="top-bar">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <h1>Site Settings</h1>
                 <div class="admin-info">
                     <div class="admin-avatar">
@@ -419,6 +568,57 @@ if (isset($_SESSION['success_message'])) {
                 </div>
             </div>
         </div>
+
+        <!-- Mobile Overlay -->
+        <div class="overlay" onclick="closeSidebar()"></div>
     </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const menuIcon = menuBtn.querySelector('i');
+
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+
+            // Toggle icon between hamburger and X
+            if (sidebar.classList.contains('show')) {
+                menuIcon.className = 'fas fa-times';
+            } else {
+                menuIcon.className = 'fas fa-bars';
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const menuIcon = menuBtn.querySelector('i');
+
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+
+            // Reset icon to hamburger
+            menuIcon.className = 'fas fa-bars';
+        }
+
+        // Close sidebar when clicking on menu items
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+
+        // Close sidebar on window resize if desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
+    </script>
 </body>
 </html>

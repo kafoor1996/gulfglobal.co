@@ -27,7 +27,7 @@ if (isset($_GET['cart'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Place Order - Gulf Global Co</title>
-    <link rel="stylesheet" href="css/style.css?v=3.2">
+    <link rel="stylesheet" href="css/style.css?v=4.0">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -413,8 +413,8 @@ if (isset($_GET['cart'])) {
         }
     </style>
 
-    <script src="js/script.js?v=2.5"></script>
-    <script src="js/whatsapp.js?v=1.8"></script>
+    <script src="js/script.js?v=2.6"></script>
+    <script src="js/whatsapp.js?v=1.9"></script>
     <script>
         document.getElementById('order-form').addEventListener('submit', async function(e) {
             e.preventDefault();

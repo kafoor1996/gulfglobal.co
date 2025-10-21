@@ -125,11 +125,16 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         .sidebar {
             width: 250px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
             color: white;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
         }
 
         .sidebar-header {
@@ -149,6 +154,10 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         .sidebar-menu {
             padding: 20px 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
 
         .menu-item {
@@ -180,11 +189,14 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         .top-bar h1 {
             color: #2c5aa0;
-            font-size: 1.8rem;
+            font-size: 1.4rem;
+            text-align: center;
+            flex: 1;
         }
 
         .admin-info {
@@ -192,10 +204,98 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
             align-items: center;
             gap: 15px;
         }
-        .admin-details {
+
+        /* Right Side Dots Menu */
+        .admin-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .admin-menu-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .admin-menu-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .admin-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .admin-dropdown.show {
+            display: block;
+        }
+
+        .admin-dropdown-header {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .admin-dropdown-header .admin-details {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+        }
+
+        .admin-dropdown-header .admin-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .admin-dropdown-header .role-badge {
+            background: #2c5aa0;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .admin-dropdown-divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 0;
+        }
+
+        .admin-dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #333;
+            text-decoration: none;
+            transition: background 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .admin-dropdown-item:hover {
+            background: #f8f9fa;
+            color: #2c5aa0;
+        }
+
+        .admin-dropdown-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
         }
 
         .role-badge {
@@ -620,22 +720,153 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         @media (max-width: 768px) {
             .sidebar {
-                width: 100%;
-                position: relative;
-                height: auto;
+                transform: translateX(-100%);
+                width: 280px;
+                z-index: 1000;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
             }
 
             .main-content {
                 margin-left: 0;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .top-bar {
+                padding: 15px 20px;
+                position: relative;
+                justify-content: center;
+            }
+
+            .top-bar h1 {
+                font-size: 1.2rem;
+                text-align: center;
             }
 
             .form-row {
                 grid-template-columns: 1fr;
             }
 
+            .content {
+                width: 100%;
+                max-width: 100%;
+            }
+
             .subcategories-grid {
                 grid-template-columns: 1fr;
             }
+
+            /* Mobile Table Responsive */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+
+            .table-responsive table {
+                min-width: 700px;
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .table-responsive th,
+            .table-responsive td {
+                padding: 8px 12px;
+                text-align: left;
+                border-bottom: 1px solid #e0e0e0;
+                white-space: nowrap;
+            }
+
+            .table-responsive th {
+                background: #f8f9fa;
+                font-weight: 600;
+                color: #333;
+                font-size: 0.85rem;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            .table-responsive td {
+                font-size: 0.8rem;
+                color: #666;
+            }
+
+            .table-responsive tr:hover {
+                background: #f8f9fa;
+            }
+
+            .subcategories-table {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .subcategories-table table {
+                min-width: 800px;
+            }
+
+            .subcategories-table .subcategory-actions {
+                display: flex;
+                gap: 5px;
+                flex-wrap: wrap;
+            }
+
+            .subcategories-table .btn {
+                padding: 4px 8px;
+                font-size: 0.75rem;
+                min-width: auto;
+            }
+
+            .mobile-menu-btn {
+                display: block !important;
+                background: #2c5aa0;
+                color: white;
+                border: none;
+                padding: 12px 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1.1rem;
+                position: absolute;
+                left: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 1001;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
+            }
+
+            .mobile-menu-btn:hover {
+                background: #1e3d6f;
+                transform: translateY(-50%) scale(1.05);
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .overlay.show {
+                display: block;
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+        }
+
+        .overlay {
+            display: none;
         }
     </style>
 </head>
@@ -675,18 +906,37 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <!-- Main Content -->
         <div class="main-content">
             <div class="top-bar">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <h1>Subcategories Management</h1>
                 <div class="admin-info">
-                    <div class="admin-avatar">
-                        <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
+                    <div class="admin-menu">
+                        <button class="admin-menu-btn" onclick="toggleAdminMenu()">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="admin-dropdown" id="adminDropdown">
+                            <div class="admin-dropdown-header">
+                                <div class="admin-details">
+                                    <span class="admin-name"><?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                                    <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
+                                </div>
+                            </div>
+                            <div class="admin-dropdown-divider"></div>
+                            <a href="settings.php" class="admin-dropdown-item">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="users.php" class="admin-dropdown-item">
+                                <i class="fas fa-users"></i> Users
+                            </a>
+                            <a href="../index.php" class="admin-dropdown-item" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> View Website
+                            </a>
+                            <a href="logout.php" class="admin-dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
                     </div>
-                    <div class="admin-details">
-                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
-                        <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
-                    </div>
-                    <a href="logout.php" class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
                 </div>
             </div>
 
@@ -876,6 +1126,70 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 closeDeleteModal();
             }
         }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const menuIcon = menuBtn.querySelector('i');
+
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+
+            // Toggle icon between hamburger and X
+            if (sidebar.classList.contains('show')) {
+                menuIcon.className = 'fas fa-times';
+            } else {
+                menuIcon.className = 'fas fa-bars';
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const menuIcon = menuBtn.querySelector('i');
+
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+
+            // Reset icon to hamburger
+            menuIcon.className = 'fas fa-bars';
+        }
+
+        // Close sidebar when clicking on menu items
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+
+        // Close sidebar on window resize if desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
+
+        function toggleAdminMenu() {
+            const dropdown = document.getElementById('adminDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close admin menu when clicking outside
+        document.addEventListener('click', (event) => {
+            const adminMenu = document.querySelector('.admin-menu');
+            const adminDropdown = document.getElementById('adminDropdown');
+
+            if (adminMenu && !adminMenu.contains(event.target)) {
+                adminDropdown.classList.remove('show');
+            }
+        });
     </script>
+
+    <!-- Mobile Overlay -->
+    <div class="overlay" onclick="closeSidebar()"></div>
 </body>
 </html>
