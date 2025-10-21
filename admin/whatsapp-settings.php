@@ -101,8 +101,13 @@ if (isset($_SESSION['success_message'])) {
             background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
             color: white;
             position: fixed;
+            top: 0;
+            left: 0;
             height: 100vh;
-            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar-header {
@@ -122,6 +127,10 @@ if (isset($_SESSION['success_message'])) {
 
         .sidebar-menu {
             padding: 20px 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
 
         .menu-item {
@@ -158,6 +167,7 @@ if (isset($_SESSION['success_message'])) {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
         }
 
         .top-bar h1 {
@@ -169,11 +179,103 @@ if (isset($_SESSION['success_message'])) {
             display: flex;
             align-items: center;
             gap: 15px;
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
         }
-        .admin-details {
+
+        /* Right Side Dots Menu */
+        .admin-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .admin-menu-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .admin-menu-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .admin-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .admin-dropdown.show {
+            display: block;
+        }
+
+        .admin-dropdown-header {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .admin-dropdown-header .admin-details {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+        }
+
+        .admin-dropdown-header .admin-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .admin-dropdown-header .role-badge {
+            background: #2c5aa0;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .admin-dropdown-divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 0;
+        }
+
+        .admin-dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #333;
+            text-decoration: none;
+            transition: background 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .admin-dropdown-item:hover {
+            background: #f8f9fa;
+            color: #2c5aa0;
+        }
+
+        .admin-dropdown-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
         }
 
         .role-badge {
@@ -345,12 +447,42 @@ if (isset($_SESSION['success_message'])) {
         }
 
         @media (max-width: 768px) {
+            .top-bar {
+                padding: 15px 20px;
+                position: relative;
+                justify-content: center;
+            }
+
+            .admin-info {
+                right: 20px;
+            }
+
             .sidebar {
                 transform: translateX(-100%);
+                width: 280px;
+                z-index: 1000;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
             }
 
             .main-content {
                 margin-left: 0;
+                padding: 0;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .content {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .content > div {
+                padding: 20px;
+                width: 100%;
+                max-width: 100%;
             }
 
             .method-options {
@@ -389,16 +521,32 @@ if (isset($_SESSION['success_message'])) {
                 </button>
                 <h1>WhatsApp Settings</h1>
                 <div class="admin-info">
-                    <div class="admin-avatar">
-                        <?php echo strtoupper(substr($_SESSION['admin_name'], 0, 1)); ?>
+                    <div class="admin-menu">
+                        <button class="admin-menu-btn" onclick="toggleAdminMenu()">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="admin-dropdown" id="adminDropdown">
+                            <div class="admin-dropdown-header">
+                                <div class="admin-details">
+                                    <span class="admin-name"><?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
+                                    <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
+                                </div>
+                            </div>
+                            <div class="admin-dropdown-divider"></div>
+                            <a href="settings.php" class="admin-dropdown-item">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="users.php" class="admin-dropdown-item">
+                                <i class="fas fa-users"></i> Users
+                            </a>
+                            <a href="../index.php" class="admin-dropdown-item" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> View Website
+                            </a>
+                            <a href="logout.php" class="admin-dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
                     </div>
-                    <div class="admin-details">
-                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
-                        <small class="role-badge"><?php echo htmlspecialchars($_SESSION['admin_role'] ?? 'Unknown'); ?></small>
-                    </div>
-                    <a href="logout.php" class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
                 </div>
             </div>
 
@@ -515,6 +663,21 @@ if (isset($_SESSION['success_message'])) {
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) {
                 closeSidebar();
+            }
+        });
+
+        function toggleAdminMenu() {
+            const dropdown = document.getElementById('adminDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close admin menu when clicking outside
+        document.addEventListener('click', (event) => {
+            const adminMenu = document.querySelector('.admin-menu');
+            const adminDropdown = document.getElementById('adminDropdown');
+            
+            if (adminMenu && !adminMenu.contains(event.target)) {
+                adminDropdown.classList.remove('show');
             }
         });
     </script>
