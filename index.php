@@ -16,7 +16,7 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gulf Global Co - Your Trusted Partner for Global Imports & Trade</title>
-    <link rel="stylesheet" href="css/style.css?v=3.1">
+    <link rel="stylesheet" href="css/style.css?v=3.9">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -195,41 +195,47 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <p>Your trusted partner in excellence and innovation</p>
             </div>
             <div class="about-content">
-                <div class="about-text">
-                    <h3>About Gulf Global Co</h3>
-                    <p>Gulf Global Co is a global import and trading company that delivers quality groceries, meats, and building materials across India and internationally. We connect trusted suppliers with growing markets through reliable logistics and transparent trade practices.</p>
-                    <p>We specialize in premium groceries, fresh & frozen meats, and durable building materials, ensuring quality and reliability in every delivery. Our commitment to excellence has made us a trusted partner for businesses and consumers worldwide.</p>
-                    <div class="about-features">
-                        <div class="feature-item">
-                            <i class="fas fa-shipping-fast"></i>
-                            <span>Fast & Reliable Delivery</span>
+                <div class="row">
+                    <div class="col-6 col-md-12">
+                        <div class="about-text">
+                            <h3>About Gulf Global Co</h3>
+                            <p>Gulf Global Co is a global import and trading company that delivers quality groceries, meats, and building materials across India and internationally. We connect trusted suppliers with growing markets through reliable logistics and transparent trade practices.</p>
+                            <p>We specialize in premium groceries, fresh & frozen meats, and durable building materials, ensuring quality and reliability in every delivery. Our commitment to excellence has made us a trusted partner for businesses and consumers worldwide.</p>
+                            <div class="about-features">
+                                <div class="feature-item">
+                                    <i class="fas fa-shipping-fast"></i>
+                                    <span>Fast & Reliable Delivery</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Quality Guaranteed</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-handshake"></i>
+                                    <span>Trusted Partnership</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="feature-item">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Quality Guaranteed</span>
+                    </div>
+                    <div class="col-6 col-md-12">
+                        <div class="about-stats">
+                            <div class="stat-item">
+                                <h4>Fast</h4>
+                                <p>Delivery</p>
+                            </div>
+                            <div class="stat-item">
+                                <h4>Secured</h4>
+                                <p>Payment</p>
+                            </div>
+                            <div class="stat-item">
+                                <h4>Money-Back</h4>
+                                <p>Guarantee</p>
+                            </div>
+                            <div class="stat-item">
+                                <h4>24/7</h4>
+                                <p>Support</p>
+                            </div>
                         </div>
-                        <div class="feature-item">
-                            <i class="fas fa-handshake"></i>
-                            <span>Trusted Partnership</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="about-stats">
-                    <div class="stat-item">
-                        <h4>Fast</h4>
-                        <p>Delivery</p>
-                    </div>
-                    <div class="stat-item">
-                        <h4>Secured</h4>
-                        <p>Payment</p>
-                    </div>
-                    <div class="stat-item">
-                        <h4>Money-Back</h4>
-                        <p>Guarantee</p>
-                    </div>
-                    <div class="stat-item">
-                        <h4>24/7</h4>
-                        <p>Support</p>
                     </div>
                 </div>
             </div>
@@ -306,26 +312,32 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <section id="quality" class="quality">
         <div class="container">
             <div class="quality-content">
-                <div class="quality-text">
-                    <h2>Quality Standards</h2>
-                    <p>We are committed to maintaining the highest quality standards in all our products and services. Our quality assurance processes ensure that every product meets international standards and exceeds customer expectations.</p>
-                    <ul class="quality-features">
-                        <li><i class="fas fa-check"></i> ISO Certified Products</li>
-                        <li><i class="fas fa-check"></i> Rigorous Testing Procedures</li>
-                        <li><i class="fas fa-check"></i> Continuous Quality Monitoring</li>
-                        <li><i class="fas fa-check"></i> Customer Satisfaction Guarantee</li>
-                    </ul>
-                </div>
-                <div class="quality-certificates">
-                    <div class="certificate">
-                        <i class="fas fa-certificate"></i>
-                        <h4>ISO 9001:2015</h4>
-                        <p>Quality Management</p>
+                <div class="row">
+                    <div class="col-6 col-md-12">
+                        <div class="quality-text">
+                            <h2>Quality Standards</h2>
+                            <p>We are committed to maintaining the highest quality standards in all our products and services. Our quality assurance processes ensure that every product meets international standards and exceeds customer expectations.</p>
+                            <ul class="quality-features">
+                                <li><i class="fas fa-check"></i> ISO Certified Products</li>
+                                <li><i class="fas fa-check"></i> Rigorous Testing Procedures</li>
+                                <li><i class="fas fa-check"></i> Continuous Quality Monitoring</li>
+                                <li><i class="fas fa-check"></i> Customer Satisfaction Guarantee</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="certificate">
-                        <i class="fas fa-award"></i>
-                        <h4>ISO 14001:2015</h4>
-                        <p>Environmental Management</p>
+                    <div class="col-6 col-md-12">
+                        <div class="quality-certificates">
+                            <div class="certificate">
+                                <i class="fas fa-certificate"></i>
+                                <h4>ISO 9001:2015</h4>
+                                <p>Quality Management</p>
+                            </div>
+                            <div class="certificate">
+                                <i class="fas fa-award"></i>
+                                <h4>ISO 14001:2015</h4>
+                                <p>Environmental Management</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -538,7 +550,7 @@ $hot_sale_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <script src="js/script.js?v=2.4"></script>
+    <script src="js/script.js?v=2.5"></script>
     <script src="js/whatsapp.js?v=1.8"></script>
 </body>
 </html>

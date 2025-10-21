@@ -310,25 +310,49 @@ body {
     gap: 0.5rem;
     padding: 8px 16px;
     border-radius: 25px;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-    color: white;
+    background: #fb641b;
+    color: white !important;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+    box-shadow: 0 4px 12px rgba(251, 100, 27, 0.3);
     font-weight: 600;
     font-size: 0.9rem;
-    text-decoration: none;
+    text-decoration: none !important;
+    border-bottom: none !important;
+    outline: none;
     white-space: nowrap;
 }
 
+.hot-sale-link span {
+    color: white !important;
+}
+
 .hot-sale-link:hover {
-    background: linear-gradient(135deg, #e55a2b 0%, #e8821a 100%);
+    background: white;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
-    color: white;
+    box-shadow: 0 6px 16px rgba(251, 100, 27, 0.4);
+    color: #fb641b !important;
+    text-decoration: none !important;
+    border-bottom: none !important;
+    outline: none;
+    box-decoration-break: none;
+}
+
+.hot-sale-link:hover i {
+    color: #fb641b;
+}
+
+.hot-sale-link:hover span {
+    color: #fb641b !important;
 }
 
 .hot-sale-link i {
     font-size: 1.1rem;
+    color: white;
+}
+
+/* Remove nav-link::after for hot-sale-link */
+.hot-sale-link::after {
+    display: none !important;
 }
 
 /* Search Container */
@@ -653,12 +677,22 @@ body {
     .hero {
         padding-top: 70px; /* Only navbar height on tablet and mobile since header is hidden */
     }
+
+    /* Adjust scroll padding for tablet navbar */
+    html {
+        scroll-padding-top: 80px; /* Account for tablet navbar height */
+    }
 }
 
 /* Mobile hero section with increased navbar height */
 @media (max-width: 768px) {
     .hero {
         padding-top: 80px; /* Increased navbar height on mobile */
+    }
+
+    /* Adjust scroll padding for mobile navbar */
+    html {
+        scroll-padding-top: 90px; /* Slightly more padding for mobile */
     }
 }
 
@@ -863,10 +897,31 @@ body {
 }
 
 .about-content {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 4rem;
+    margin-top: 2rem;
+}
+
+.about-content .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
     align-items: center;
+}
+
+.about-content .col-6 {
+    flex: 0 0 calc(50% - 1rem);
+    padding: 0 1rem;
+}
+
+.about-content .col-md-12 {
+    flex: 0 0 100%;
+}
+
+/* Desktop: Ensure col-6 works on larger screens */
+@media (min-width: 769px) {
+    .about-content .col-6 {
+        flex: 0 0 calc(50% - 1rem) !important;
+        padding: 0 1rem;
+    }
 }
 
 .about-text h3 {
@@ -1467,10 +1522,31 @@ body {
 }
 
 .quality-content {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 4rem;
+    margin-top: 2rem;
+}
+
+.quality-content .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
     align-items: center;
+}
+
+.quality-content .col-6 {
+    flex: 0 0 calc(50% - 1rem);
+    padding: 0 1rem;
+}
+
+.quality-content .col-md-12 {
+    flex: 0 0 100%;
+}
+
+/* Desktop: Ensure col-6 works on larger screens */
+@media (min-width: 769px) {
+    .quality-content .col-6 {
+        flex: 0 0 calc(50% - 1rem) !important;
+        padding: 0 1rem;
+    }
 }
 
 .quality-text h2 {
@@ -2196,22 +2272,24 @@ body {
 
     /* Style Hot Sale as special menu item */
     .nav-menu li:nth-child(2) .nav-link {
-        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        background: #fb641b;
         color: white !important;
         font-weight: 700;
         border-radius: 25px;
         margin: 0.5rem 1rem;
         text-align: center;
-        box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        box-shadow: 0 4px 12px rgba(251, 100, 27, 0.3);
         border: 2px solid rgba(255, 255, 255, 0.2);
         transition: all 0.3s ease;
     }
 
-    .nav-menu li:nth-child(3) .nav-link:hover {
-        background: linear-gradient(135deg, #e55a2b 0%, #e8821a 100%);
+    .nav-menu li:nth-child(2) .nav-link:hover {
+        background: #fb641b;
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+        box-shadow: 0 6px 16px rgba(251, 100, 27, 0.4);
         color: white !important;
+        text-decoration: none;
+        border-bottom: none;
     }
 
 
@@ -2271,11 +2349,11 @@ body {
         visibility: hidden;
         transform: none;
         box-shadow: none;
-        background: rgba(102, 126, 234, 0.1);
+        background: #ffffff;
         border-radius: 8px;
-        margin: 0.5rem 0 0 1rem;
+        margin: 1rem;
         padding: 0.5rem 0;
-        border: 1px solid rgba(102, 126, 234, 0.2);
+        border: 1px solid #e9ecef;
         max-height: 0;
         overflow: hidden;
         transition: all 0.3s ease;
@@ -2288,8 +2366,18 @@ body {
     }
 
     .dropdown-link {
-        padding: 0.6rem 1rem;
+        padding: 0.8rem 1.5rem;
         font-size: 0.9rem;
+        color: #333;
+        background: transparent;
+        margin: 0.2rem 0;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-link:hover {
+        background: #f8f9fa;
+        color: #2c5aa0;
     }
 
     .dropdown-toggle i {
@@ -2303,16 +2391,26 @@ body {
         visibility: visible;
         transform: none;
         box-shadow: none;
-        background: rgba(102, 126, 234, 0.1);
+        background: #f8f9fa;
         border-radius: 8px;
         margin: 0.5rem 0 0 1.5rem;
         padding: 0.5rem 0;
-        border: 1px solid rgba(102, 126, 234, 0.2);
+        border: 1px solid #e9ecef;
     }
 
     .submenu-link {
-        padding: 0.5rem 0.8rem;
+        padding: 0.6rem 1.2rem;
         font-size: 0.85rem;
+        color: #666;
+        background: transparent;
+        margin: 0.1rem 0;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .submenu-link:hover {
+        background: #ffffff;
+        color: #2c5aa0;
     }
 
     .dropdown-submenu .dropdown-link i {
@@ -2366,6 +2464,23 @@ body {
     .quality-content,
     .contact-content {
         margin-top: 1rem;
+    }
+
+    .about-content .col-6,
+    .quality-content .col-6 {
+        flex: 0 0 100%;
+        margin-bottom: 2rem;
+    }
+
+    .about-content .col-md-12,
+    .quality-content .col-md-12 {
+        flex: 0 0 100%;
+        margin-bottom: 2rem;
+    }
+
+    .about-content .row,
+    .quality-content .row {
+        gap: 1rem;
     }
 
     .col-3 {
@@ -2553,6 +2668,7 @@ body {
 /* Smooth Scrolling */
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 80px; /* Account for fixed navbar height */
 }
 
 /* Loading Animation */

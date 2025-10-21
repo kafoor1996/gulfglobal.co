@@ -421,7 +421,7 @@ $recent_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <a href="hot-sale.php" class="action-btn">
                         <i class="fas fa-fire"></i> Manage Hot Sale
                     </a>
-                    <a href="../index.html" class="action-btn" target="_blank">
+                    <a href="../index.php" class="action-btn" target="_blank">
                         <i class="fas fa-external-link-alt"></i> View Website
                     </a>
                 </div>

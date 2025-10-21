@@ -27,7 +27,7 @@ if (isset($_GET['cart'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Place Order - Gulf Global Co</title>
-    <link rel="stylesheet" href="css/style.css?v=3.1">
+    <link rel="stylesheet" href="css/style.css?v=3.2">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -126,32 +126,38 @@ if (isset($_GET['cart'])) {
             margin-top: 2rem;
         }
         .btn-order {
-            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            background: #22c55e;
             color: white;
-            padding: 1rem 2rem;
+            height: 50px;
+            padding: 0px 50px;
             border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
+            border-radius: 4px;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
         }
         .btn-order:hover {
-            transform: translateY(-2px);
+            background: #16a34a;
+            transform: translateY(-1px);
         }
         .btn-back {
             background: #6c757d;
             color: white;
-            padding: 1rem 2rem;
+            /* height: 50px; */
+            padding: 13px 50px;
             border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-weight: 600;
             text-decoration: none;
             display: inline-block;
-            transition: transform 0.3s;
+            text-align: center;
+            transition: all 0.3s ease;
         }
         .btn-back:hover {
-            transform: translateY(-2px);
+            background: #5a6268;
+            transform: translateY(-1px);
             color: white;
         }
         @media (max-width: 768px) {
@@ -407,8 +413,8 @@ if (isset($_GET['cart'])) {
         }
     </style>
 
-    <script src="js/script.js?v=2.4"></script>
-    <script src="js/whatsapp.js?v=1.7"></script>
+    <script src="js/script.js?v=2.5"></script>
+    <script src="js/whatsapp.js?v=1.8"></script>
     <script>
         document.getElementById('order-form').addEventListener('submit', async function(e) {
             e.preventDefault();

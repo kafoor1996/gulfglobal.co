@@ -257,7 +257,7 @@ try {
             color: white;
         }
 
-        .stat-icon.hot-sale { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-icon.hot-sale { background: #fb641b; }
         .stat-icon.total { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 
         .stat-content h3 {
@@ -317,7 +317,7 @@ try {
         }
 
         .hot-sale-badge {
-            background: #f5576c;
+            background: #fb641b;
             color: white;
             padding: 3px 8px;
             border-radius: 12px;
@@ -370,7 +370,7 @@ try {
         }
 
         input:checked + .slider {
-            background-color: #f5576c;
+            background-color: #fb641b;
         }
 
         input:checked + .slider:before {

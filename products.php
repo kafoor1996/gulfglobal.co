@@ -64,7 +64,7 @@ foreach ($products as $product) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products - Gulf Global Co</title>
-    <link rel="stylesheet" href="css/style.css?v=3.1">
+    <link rel="stylesheet" href="css/style.css?v=3.2">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -482,17 +482,21 @@ foreach ($products as $product) {
     <section class="quality">
         <div class="container">
             <div class="quality-content">
-                <div class="quality-text">
-                    <h2>Need Custom Solutions?</h2>
-                    <p>Our team of experts can help you design and implement custom solutions tailored to your specific requirements. Contact us today to discuss your needs.</p>
-                    <ul class="quality-features">
-                        <li><i class="fas fa-check"></i> Custom Design & Engineering</li>
-                        <li><i class="fas fa-check"></i> Technical Consultation</li>
-                        <li><i class="fas fa-check"></i> Installation & Training</li>
-                        <li><i class="fas fa-check"></i> Ongoing Support</li>
-                    </ul>
-                </div>
-                <div class="quality-certificates">
+                <div class="row">
+                    <div class="col-6 col-md-12">
+                        <div class="quality-text">
+                            <h2>Need Custom Solutions?</h2>
+                            <p>Our team of experts can help you design and implement custom solutions tailored to your specific requirements. Contact us today to discuss your needs.</p>
+                            <ul class="quality-features">
+                                <li><i class="fas fa-check"></i> Custom Design & Engineering</li>
+                                <li><i class="fas fa-check"></i> Technical Consultation</li>
+                                <li><i class="fas fa-check"></i> Installation & Training</li>
+                                <li><i class="fas fa-check"></i> Ongoing Support</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-12">
+                        <div class="quality-certificates">
                     <div class="certificate">
                         <i class="fas fa-phone"></i>
                         <h4>Call Us</h4>
@@ -502,6 +506,8 @@ foreach ($products as $product) {
                         <i class="fas fa-envelope"></i>
                         <h4>Email Us</h4>
                         <p>info@gulfglobal.co</p>
+                    </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -666,7 +672,7 @@ foreach ($products as $product) {
         </div>
     </div>
 
-    <script src="js/script.js?v=2.4"></script>
-    <script src="js/whatsapp.js?v=1.7"></script>
+    <script src="js/script.js?v=2.5"></script>
+    <script src="js/whatsapp.js?v=1.8"></script>
 </body>
 </html>

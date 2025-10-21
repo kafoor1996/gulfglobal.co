@@ -515,7 +515,7 @@ foreach ($subcategories as $subcategory) {
         }
 
         .hot-sale-badge {
-            background: #f5576c;
+            background: #fb641b;
             color: white;
             padding: 3px 8px;
             border-radius: 12px;
